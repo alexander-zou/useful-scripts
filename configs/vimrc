@@ -1,0 +1,149 @@
+set nocompatible
+
+syntax on
+
+"enable file type plugin
+filetype on
+filetype plugin on
+filetype plugin indent on
+
+"set mapleader
+let mapleader = ","
+let g:mapleader = ","
+
+"Set to auto read when a file is changed from the outside
+set autoread
+
+"ruler
+set	noeb novb ruler
+
+"backspace
+set backspace=indent,eol,start whichwrap+=<,>,[,]
+
+"encoding
+set fileencodings=UTF-8,GBK,ucs-bom,BIG5,latin1
+
+"search
+set incsearch
+set hlsearch
+set ignorecase
+
+"command
+set showcmd
+set showmatch
+
+"tab setting
+set smarttab
+set tabstop=8
+set softtabstop=8
+set shiftwidth=8
+
+"show line number
+set number
+
+"indent setting
+set autoindent
+set smartindent 
+
+"statusbar format
+set statusline=%F%m%r%h%w\ [%{&fenc!=''?&fenc:&enc},%{&ff},%Y]\ [DEC:\%03.3b]\ [HEX:\%02.2B]\ [COL:%06v]\ [ROW:%06l/%L(%03p%%)]
+set laststatus=2
+
+"disable fold by default
+set foldmethod=syntax
+set foldlevel=99
+
+"------------------------------------------------------------
+"Key mapping
+"------------------------------------------------------------
+"Fast saving
+"nmap <leader>w :w!<cr>
+"nmap <leader>f :find<cr>
+"nmap <leader>s :w!<cr>
+"nmap <leader>c :tabc<cr>
+"nmap <leader>n :tabn<cr>
+
+"map <F2> :tabp<CR>
+"map <F3> :tabn<CR>
+"imap <F2> <ESC>:tabp<CR>
+"imap <F3> <ESC>:tabn<CR>
+
+"------------------------------------------------------------
+"file specific setting
+"------------------------------------------------------------
+"
+	"C/C++
+	"--------------------------------------------------------
+	autocmd FileType c,cpp,h,hpp setlocal et 
+	autocmd FileType c,cpp,h,hpp setlocal sta 
+	autocmd FileType c,cpp,h,hpp setlocal sw=4
+	autocmd FileType c,cpp,h,hpp setlocal tabstop=4
+	autocmd FileType c,cpp,h,hpp setlocal softtabstop=4
+	autocmd FileType c,cpp,h,hpp setlocal shiftwidth=4
+	autocmd FileType c,cpp,h,hpp setlocal expandtab
+
+	"PHP
+	"--------------------------------------------------------
+	autocmd BufRead,BufNewFile *.module set filetype=php
+	autocmd BufRead,BufNewFile *.install set filetype=php
+	autocmd FileType php set makeprg=~/.vim/zca\ --recursive\ %
+	autocmd FileType php set efm==%f(line\ %l):\ %m
+	autocmd FileType php let php_sql_query=1
+	autocmd FileType php let php_htmlInStrings=1
+	autocmd FileType php let php_noShortTags=1
+	autocmd FileType php set omnifunc=phpcomplete#CompletePHP
+	autocmd FileType php setlocal et 
+	autocmd FileType php setlocal sta 
+	autocmd FileType php setlocal sw=4
+	autocmd FileType php setlocal ts=4
+	autocmd FileType php setlocal tabstop=4
+	autocmd FileType php setlocal softtabstop=4
+	autocmd FileType php setlocal shiftwidth=4
+
+	"Python
+	"--------------------------------------------------------
+	autocmd Filetype python set makeprg=python\ %
+	autocmd FileType python set efm=%C\ %.%#,%A\ \ File\ \"%f\"\\,\ line\ %l%.%#,%Z%[%^\ ]%\\@=%m
+	autocmd FileType python setlocal et 
+	autocmd FileType python setlocal sta 
+	autocmd FileType python setlocal sw=4
+	autocmd FileType python setlocal ts=4
+	autocmd FileType python setlocal tabstop=4
+	autocmd FileType python setlocal softtabstop=4
+	autocmd FileType python setlocal shiftwidth=4
+
+	"Ruby
+	autocmd FileType ruby setlocal et 
+	autocmd FileType ruby setlocal sta 
+	autocmd FileType ruby setlocal sw=4
+	autocmd FileType ruby setlocal ts=4
+	autocmd FileType ruby setlocal tabstop=4
+	autocmd FileType ruby setlocal softtabstop=4
+	autocmd FileType ruby setlocal shiftwidth=4
+
+	"HTML
+	autocmd FileType html,xhtml setlocal et 
+	autocmd FileType html,xhtml setlocal sta 
+	autocmd FileType html,xhtml setlocal sw=2
+	autocmd FileType html,xhtml setlocal ts=2
+
+	"Open to last edit
+	"--------------------------------------------------------
+	autocmd BufReadPost *
+		\ if line("'\"") > 0 && line("'\"") <= line("$") |
+		\   exe "normal g`\"" |
+		\ endif
+
+"------------------------------------------------------------
+"os specific setting
+"-----------------------------------------------------------
+if has("win32")
+	set fileformats=dos,unix
+else
+	set backup
+	set backupdir=~/.vim/backup/
+	set noswapfile
+	set fileformats=unix,dos
+	set tags+=../tags,../../tags
+endif
+

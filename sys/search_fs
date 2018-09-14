@@ -1,0 +1,122 @@
+#!/usr/bin/perl
+
+# by zoujiachen@baidu.com
+# 2011-05-13
+
+use File::Find;
+
+sub Error {
+	print STDERR "$0: @_\nTry '$0 -h' for help.\n";
+	exit -1;
+}
+
+sub Warning {
+	print STDERR "$0: @_\n";
+}
+
+$help = 0;
+$bin = 0;
+$count = 0;
+$print_count = 0;
+$pattern = "";
+@dirs = ();
+
+$grep_args = "";
+$grep_args_bin = "";
+$name_prefix = "";
+$name_suffix = "";
+
+sub FindText {
+	my $file = @_[0];
+	my $fullname = @_[1];
+	my $result = `grep $grep_args '$pattern' '$file' | head -n 1`;
+	if ( 0 < length $result) {
+		print $name_prefix.$fullname.$name_suffix.":".$result;
+		$count ++;
+	}
+}
+
+sub FindBin {
+	my $file = @_[0];
+	my $fullname = @_[1];
+	my $result = `strings '$file' | grep $grep_args_bin '$pattern' | head -n 1`;
+	if ( 0 < length $result) {
+		print $name_prefix.$fullname.$name_suffix.":".$result;
+		$count ++;
+	}
+}
+
+sub Search {
+	my $file = $_;
+	my $fullname = $File::Find::name;
+	my $type = `file '$file'`;
+	if ( index( $type, "directory") >= 0) {
+	} elsif ( index( $type, "text") >= 0) {
+		FindText $file, $fullname;
+	} elsif ( $bin) {
+		FindBin $file, $fullname;
+	}
+}
+
+for ( @ARGV) {
+	if ( $_ eq "-h" or $_ eq "-help" or $_ eq "--help") {
+		$help = 1;
+	} elsif ( $_ eq "-r") {
+		if ( substr( `uname`, 0, 6) eq "Darwin") {
+			$grep_args .= " -E";
+			$grep_args_bin .= " -E";
+		} else {
+			$grep_args .= " -P";
+			$grep_args_bin .= " -P";
+		}
+	} elsif ( $_ eq "-n") {
+		$grep_args .= " -n";
+	} elsif ( $_ eq "-b") {
+		$bin = 1;
+	} elsif ( $_ eq "-m") {
+		$name_prefix = "\033[33;1m";
+		$name_suffix = "\033[0m";
+	} elsif ( $_ eq "-c") {
+		$print_count = 1;
+	} elsif ( $pattern eq "") {
+		$pattern = $_;
+	} else {
+		push( @dirs, $_);
+	}
+}
+
+if ( $help) {
+	print "
+USAGE:
+	$0 [-b] [-c] [-n] [-r] [-h] \033[4mPATTERN\033[0m \033[4mDIRECTORY\033[0m...
+
+DESCRIPT:
+	Search for files that contain \033[4mPATTERN\033[0m in every \033[4mDIRECTORY\033[0m.
+
+OPTIONS:
+	-b	Check strings from binary files ( By default will search text files only )
+	-c	Count matched files
+	-n	Show matched line number of text files
+	-m	Mark out file names by terminal color
+	-r	Use perl regex to search
+	
+	-h	Show this message
+
+";
+	exit -1;
+}
+
+if ( $pattern eq "") {
+	Error "missing PATTERN for search";
+} elsif ( @dirs <= 0) {
+	Error "missing DIRECTORY to search";
+}
+
+for ( @dirs) {
+	find( \&Search, $_);
+}
+
+if ( $print_count) {
+	print "\n $count files found.\n";
+}
+

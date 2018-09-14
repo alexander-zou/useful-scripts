@@ -1,0 +1,215 @@
+#!/bin/bash
+
+MY_NAME="$0"
+USER_NAME=`whoami`
+DOMAIN="megvii.com"
+COMPANY="Face++, Megvii"
+YEAR=`date '+%Y'`
+TIME=`date '+%Y-%m-%d %H:%M'`
+
+mode="auto"	#default
+magic=""
+mult_comment_start=""
+mult_comment_line_start=""
+mult_comment_line_end=""
+mult_comment_end=""
+single_comment_start=""
+single_comment_end=""
+interpreter=""
+
+grep_opt="-P"
+if [ `uname` == "Darwin" ]
+then
+	grep_opt="-E"
+fi
+
+PrintPattern()
+{
+	local file="$1"
+	local base=`basename $file`
+	if [ "$magic" ]
+	then
+		echo "$magic" >> $file
+		echo >> $file
+	fi
+	echo -e "$mult_comment_start" >> $file
+	echo -e "${mult_comment_line_start}Copyright (c) $YEAR $COMPANY. All Rights Reserved" >> $file
+	echo -e "${mult_comment_line_start}" >> $file
+	echo -e "${mult_comment_line_start}@File   : $base   ${mult_comment_line_end}" >> $file
+	echo -e "${mult_comment_line_start}@Author : ${USER_NAME}@$DOMAIN   ${mult_comment_line_end}" >> $file
+	echo -e "${mult_comment_line_start}@Date   : $TIME   ${mult_comment_line_end}" >> $file
+	echo -e "${mult_comment_line_start}@Brief  :  ${mult_comment_line_end}" >> $file
+	echo -e "${mult_comment_line_start}${mult_comment_line_end}" >> $file
+	echo -e "$mult_comment_end" >> $file
+	echo -e "\n\n\n" >> $file
+	echo -e "${single_comment_start} End of '$base' ${single_comment_end}" >> $file
+	echo -e "" >> $file
+}
+
+Help()
+{
+	echo
+	echo "Usage: $MY_NAME [option] file1 [file2] ..."
+	echo
+	echo "Options:"
+	echo -e "\t-a,-auto\tauto choose pattern by suffix, act as '-s' if not sure, this is default"
+	echo -e "\t-c,-cpp\t\tcreate C/C++ source/header"
+	echo -e "\t-php\t\tcreate PHP script"
+	echo -e "\t-pl,-perl\tcreate Perl script"
+	echo -e "\t-py,-python\tcreate Python script"
+	echo -e "\t-rb,-ruby\tcreate Ruby script"
+	echo -e "\t-sh,-bash\tcreate BASH script"
+	echo -e "\t-s\t\tcreate common script, comment with '#' and no magic number '#!'"
+	echo -e "\t-h,-help\tshow this information"
+	echo -e "\t--\t\tempty option, helps when you create filename start with '-'"
+	echo
+	echo "Create source or script pattern."
+	echo
+	exit 1
+}
+
+SetMode()
+{
+	local name=$1
+	local base=`basename $name`;
+	local suffix=`echo $base | grep -o $grep_opt '\.[a-zA-Z0-9]+$'`
+	local my_mode="$mode"
+	if [ "$my_mode" = "auto" ]
+	then
+		case "$suffix" in
+			.c | .cc | .cpp | .h | .hpp )
+							my_mode="c";;
+			.php | .inc )	my_mode="php";;
+			.pl | .pm )		my_mode="perl";;
+			.py | .pyw )	my_mode="python";;
+			.rb )			my_mode="ruby";;
+			.sh )			my_mode="bash";;
+			* )				my_mode="script";;
+		esac
+	fi
+	case "$my_mode" in
+		c )
+			mult_comment_start="/**"
+			mult_comment_line_start=" * "
+			mult_comment_line_end=""
+			mult_comment_end="**/"
+			single_comment_start="/* "
+			single_comment_end="*/"
+			interpreter="";;
+		php )
+			mult_comment_start="<?php\n/* "
+			mult_comment_line_start=" * "
+			mult_comment_line_end=""
+			mult_comment_end=" */\n?>"
+			single_comment_start="<?php // "
+			single_comment_end="?>"
+			interpreter="php";;
+		perl )
+			mult_comment_start="=pod"
+			mult_comment_line_start=""
+			mult_comment_line_end=""
+			mult_comment_end="=cut"
+			single_comment_start="#"
+			single_comment_end=""
+			interpreter="perl";;
+		python )
+			mult_comment_start="'''"
+			mult_comment_line_start=""
+			mult_comment_line_end=""
+			mult_comment_end="'''"
+			single_comment_start="#"
+			single_comment_end=""
+			interpreter="python";;
+		ruby )
+			mult_comment_start="=begin"
+			mult_comment_line_start=""
+			mult_comment_line_end=""
+			mult_comment_end="=end"
+			single_comment_start="#"
+			single_comment_end=""
+			interpreter="ruby";;
+		bash )
+			mult_comment_start="###"
+			mult_comment_line_start="# "
+			mult_comment_line_end=""
+			mult_comment_end="###"
+			single_comment_start="#"
+			single_comment_end=""
+			interpreter="bash";;
+		script )
+			mult_comment_start=""
+			mult_comment_line_start="#"
+			mult_comment_line_end=""
+			mult_comment_end=""
+			single_comment_start="#"
+			single_comment_end=""
+			interpreter="";;
+	esac
+	if [ ! "$interpreter" ]
+	then
+		magic=""
+	else
+		local bin=`which $interpreter 2> /dev/null`
+		if [ "$bin" ]
+		then
+			magic="#!$bin"
+		else
+			magic=""
+		fi
+	fi
+}
+
+############## Here we go !!! #################
+
+# check params:
+
+if [ "$#" -eq "0" ]
+then
+	echo "$MY_NAME: need file name, see '$MY_NAME -h' for help." >&2
+	exit 1
+fi
+
+# parse option:
+
+if [ `echo "$1" | grep $grep_opt '^-'` ]
+then
+	case "$1" in
+		-h | -help )	Help;;
+		-a | -auto )	mode="auto";;
+		-c | -cpp )		mode="c";;
+		-php )			mode="php";;
+		-pl | -perl )	mode="perl";;
+		-py | -python )	mode="python";;
+		-rb | -ruby )	mode="ruby";;
+		-s )			mode="script";;
+		-sh | -bash )	mode="bash";;
+		-- )			;; # just ignore it!
+		* )				echo "$MY_NAME: invalid option '$1', abort."; exit 1;
+	esac
+	shift
+fi
+
+# deal with each filename:
+
+while [ "$#" -gt "0" ]
+do
+	file="$1"
+	if [ -f "$file" ]
+	then
+		echo "$MY_NAME: '$file' already exists, skiped." >&2
+	else
+		if [ -d "$file" ]
+		then
+			echo "$MY_NAME: '$file' is a directory, skiped" >&2
+		else
+			touch "$file"
+			SetMode "$file"
+			PrintPattern "$file"
+			if [ "$magic" ]; then chmod +x "$file"; fi
+		fi
+	fi
+	shift
+done
+
+exit 0
+

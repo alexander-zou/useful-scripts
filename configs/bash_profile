@@ -1,0 +1,12 @@
+
+function git_branch {
+   branch="`git branch 2>/dev/null | grep "^\*" | sed -e "s/^\*\ //"`"
+   if [ "${branch}" != "" ];then
+       if [ "${branch}" = "(no branch)" ];then
+           branch="(`git rev-parse --short HEAD`...)"
+       fi
+       echo " ($branch)"
+   fi
+}
+
+export PS1='\[\e[32;1m\]\u\[\e[36;2m\]@\[\e[35;2m\]\h \[\e[34;1m\]\w\[\e[36;2m\]\[\033[01;32m\]$(git_branch)\[\033[00m\] \$ \[\e[m\]'

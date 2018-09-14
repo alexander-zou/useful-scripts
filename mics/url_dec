@@ -1,0 +1,28 @@
+#!/usr/bin/perl
+
+=pod
+
+@File   : url_enc   
+@Author : zoujiachen@baidu.com   
+@Date   : 2012-07-02 10:58   
+@Brief  :  
+
+=cut
+
+if ( scalar( @ARGV) > 0) {
+	for ( my $i = 0; $i < scalar( @ARGV); $i ++) {
+		$line = @ARGV[ $i];
+		$line =~ s/\%([A-Fa-f0-9]{2})/pack('C', hex($1))/seg;
+		print "$line\n";
+	}
+} else {
+	while ( ! eof STDIN) {
+		$line = <STDIN>;
+		chomp $line;
+		$line =~ s/\%([A-Fa-f0-9]{2})/pack('C', hex($1))/seg;
+		print "$line\n";
+	}
+}
+
+# End of 'url_enc' 
+
