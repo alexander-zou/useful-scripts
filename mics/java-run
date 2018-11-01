@@ -1,10 +1,11 @@
 #!/bin/bash
 
-# by zoujiachen@baidu.com
-# 2011-11-11 (such a beautiful day !!)
+# by zoujiachen@megvii.com
+# 2018-10-31 aka. Christmas Day
 
 EDITOR="vim"
-COMPILER="gcc -o"
+COMPILER="javac"
+JRE="java"
 
 MY_NAME="$0"
 CMD="$1"
@@ -12,19 +13,19 @@ shift
 OPTIONS="$*"
 MY_TTY=`tty`
 MY_TTY=`basename "$MY_TTY"`
-TEMP_DIR="$HOME/.c-run"
+TEMP_DIR="$HOME/.java-run"
 WORK_DIR="$TEMP_DIR/$MY_TTY"
-SOURCE_FILE="$WORK_DIR/source.c"
-TARGET_FILE="$WORK_DIR/a.out"
+SOURCE_FILE="$WORK_DIR/Main.java"
+TARGET_FILE="$WORK_DIR/Main.class"
 
 NO_EDIT=""
 
 Help() {
 	echo -e
-	echo -e "Open $EDITOR for you to write short C code, then compile & run it immediately."
+	echo -e "Open $EDITOR for you to write short Java code, then compile & run it immediately."
 	echo -e
 	echo -e "USAGE:"
-	echo -e "\\t\\t$MY_NAME COMMAND [GCC_OPTIONS]"
+	echo -e "\\t\\t$MY_NAME COMMAND [JAVAC_OPTIONS]"
 	echo -e
 	echo -e "COMMAND:"
 	echo -e "\\t\\tnew\\t- start from an empty pattern"
@@ -32,7 +33,7 @@ Help() {
 	echo -e "\\t\\tagain\\t- compile & run last program again directly"
 	echo -e "\\t\\thelp\\t- show this information"
 	echo -e
-	echo -e "GCC_OPTIONS:"
+	echo -e "JAVAC_OPTIONS:"
 	echo -e "\\t\\tall other options will pass to compiler"
 	echo -e
 	exit 1
@@ -43,7 +44,7 @@ Print() {
 	shift
 	case "$color" in
 		GRAY	) color="30";;
-		RED		) color="31";;
+		RED	) color="31";;
 		GREEN	) color="32";;
 		YELLOW	) color="33";;
 		BLUE	) color="34";;
@@ -51,7 +52,7 @@ Print() {
 		LBLUE	) color="36";;
 		WHITE	) color="37";;
 		BLACK	) color="38";;
-		*		) color="00";;
+		*	) color="00";;
 	esac
 	printf '\033[%s;1m%s\033[0m\n' "$color" "$*"
 }
@@ -65,26 +66,14 @@ NewFile() {
 	fi
 	rm -rf $WORK_DIR/*
 	# Template Here :
-	echo '#include <stdio.h>' >> "$SOURCE_FILE"
-	echo '#include <stdlib.h>' >> "$SOURCE_FILE"
-	echo '#include <string.h>' >> "$SOURCE_FILE"
-	echo '#include <limits.h>' >> "$SOURCE_FILE"
-	echo '#include <errno.h>' >> "$SOURCE_FILE"
-	echo '#include <time.h>' >> "$SOURCE_FILE"
-	echo '#include <signal.h>' >> "$SOURCE_FILE"
-	echo '#include <setjmp.h>' >> "$SOURCE_FILE"
 	echo >> "$SOURCE_FILE"
-	echo '#include <unistd.h>' >> "$SOURCE_FILE"
-	echo '#include <fcntl.h>' >> "$SOURCE_FILE"
-	echo '#include <sys/types.h>' >> "$SOURCE_FILE"
-	echo '#include <sys/stat.h>' >> "$SOURCE_FILE"
-	echo '#include <sys/socket.h>' >> "$SOURCE_FILE"
-	echo '#include <sys/time.h>' >> "$SOURCE_FILE"
+	echo 'class Main {' >> "$SOURCE_FILE"
 	echo >> "$SOURCE_FILE"
-	echo 'int main()' >> "$SOURCE_FILE"
-	echo '{' >> "$SOURCE_FILE"
-	echo '	return 0;' >> "$SOURCE_FILE"
-	echo '}' >> "$SOURCE_FILE"
+	echo '  public static void main( String[] args) {' >> "$SOURCE_FILE"
+	echo '    System.exit( 0);' >> "$SOURCE_FILE"
+	echo '  }' >> "$SOURCE_FILE"
+	echo >> "$SOURCE_FILE"
+	echo '} // class Main' >> "$SOURCE_FILE"
 	echo >> "$SOURCE_FILE"
 }
 
@@ -108,16 +97,16 @@ esac
 
 if [ ! "$NO_EDIT" ]
 then
-	START_LINE=$(egrep -n '^\s*int\s+main\s*\(' "$SOURCE_FILE" | egrep -o '^\d+')
+	START_LINE=$(egrep -n '\s*void\s+main\s*\(\s*String' "$SOURCE_FILE" | egrep -o '^\d+')
 	if [ "$?" -ne '0' ]
 	then
 		START_LINE=1
 	else
-		START_LINE=$((START_LINE+2))
+		START_LINE=$((START_LINE+1))
 	fi
 	if [ "$EDITOR" == "vi" -o "$EDITOR" == "vim" -o "$EDITOR" == "gvim" ]
 	then
-		$EDITOR "$SOURCE_FILE" "+$START_LINE"
+		$EDITOR "$SOURCE_FILE" +"$START_LINE"
 	else
 		$EDITOR "$SOURCE_FILE"
 	fi
@@ -131,7 +120,7 @@ fi
 
 Print 'LBLUE' "Compiling ..."
 rm -rf "$TARGET_FILE"
-$COMPILER "$TARGET_FILE" "$SOURCE_FILE" $OPTIONS
+$COMPILER $OPTIONS "$SOURCE_FILE"
 ret="$?"
 if [ "$ret" -ne "0" ]
 then
@@ -139,14 +128,8 @@ then
 	exit "$ret"
 fi
 
-if [ ! -x "$TARGET_FILE" ]
-then
-	Print 'RED' "ERROR: cannot found executable binary created by compiler." >&2
-	exit 1
-fi
-
 args=""
-if [ "`egrep -o '(^|\\s)main\\s*\\(.*,.*\\)' \"$SOURCE_FILE\" 2> /dev/null`" ]
+if [ $(egrep -c '[^a-z^A-Z^0-9]+args[^a-z^A-Z^0-9]' "$SOURCE_FILE") -gt 1 ]
 then
 	Print 'LBLUE' "Please enter arguments for launching your program:"
 	read args
@@ -154,7 +137,7 @@ fi
 
 Print 'LBLUE' "Launching ..."
 Print 'YELLOW' "================= OUTPUT ================="
-bash -c "\"$TARGET_FILE\" $args"
+bash -c "\"$JRE\" -cp \"$WORK_DIR\" Main $args"
 ret="$?"
 Print 'YELLOW' "=========================================="
 if [ "$ret" -ne "0" ]

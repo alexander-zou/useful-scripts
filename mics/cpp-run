@@ -37,8 +37,6 @@ do
 	fi
 done
 
-START_LINE=1
-
 Help() {
 	echo -e
 	echo -e "Open $EDITOR for you to write short C++ code, then compile & run it immediately."
@@ -157,7 +155,6 @@ NewFile() {
 	echo >> "$SOURCE_FILE"
 	echo 'int main()' >> "$SOURCE_FILE"
 	echo '{' >> "$SOURCE_FILE"
-	START_LINE=$((`cat "$SOURCE_FILE" | wc -l`))
 	echo '	return 0;' >> "$SOURCE_FILE"
 	echo '}' >> "$SOURCE_FILE"
 	echo >> "$SOURCE_FILE"
@@ -183,6 +180,13 @@ esac
 
 if [ ! "$NO_EDIT" ]
 then
+	START_LINE=$(egrep -n '^\s*int\s+main\s*\(' "$SOURCE_FILE" | egrep -o '^\d+')
+	if [ "$?" -ne '0' ]
+	then
+		START_LINE=1
+	else
+		START_LINE=$((START_LINE+2))
+	fi
 	if [ "$EDITOR" == "vi" -o "$EDITOR" == "vim" -o "$EDITOR" == "gvim" ]
 	then
 		$EDITOR "$SOURCE_FILE" "+$START_LINE"
@@ -214,7 +218,7 @@ then
 fi
 
 args=""
-if [ "`grep -Po '(^|\\s)main\\s*\\(.*,.*\\)' \"$SOURCE_FILE\" 2> /dev/null`" ]
+if [ "`egrep -o '(^|\\s)main\\s*\\(.*,.*\\)' \"$SOURCE_FILE\" 2> /dev/null`" ]
 then
 	Print 'LBLUE' "Please enter arguments for launching your program:"
 	read args
