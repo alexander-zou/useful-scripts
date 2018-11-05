@@ -6,8 +6,7 @@
 
 import sys;
 import os;
-if os.name != 'posix' :
-    import glob;
+import glob;
 import random;
 import argparse;
 import cv2 as cv;
