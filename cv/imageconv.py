@@ -6,6 +6,8 @@
 
 import sys;
 import os;
+if os.name != 'posix' :
+    import glob;
 import random;
 import argparse;
 import cv2 as cv;
@@ -686,8 +688,13 @@ def main( args) :
     if len( files) > 1 and args.path and not os.path.isdir( args.path) :
         print( "Error: PATH should be directory for multiple input files!");
         exit( 1);
-    for file in files :
-        process( file, args);
+    if os == "posix" :
+        for file in files :
+            process( file, args);
+    else :
+        for file_arg in files :
+            for file in glob.glob( file_arg) :
+                process( file, args);
 
 if __name__ == "__main__" :
     main( sys.argv[ 1:]);
