@@ -77,11 +77,11 @@ def prompt( msg, default) :
     except :
         return default;
 
-def generate_tmp_filename_with_suffix( suffix) :
-    while True :
-        tmp_name = "__tmp_" + str( random.randint( 1000000, 9999999)) + suffix;
-        if not os.path.exists( tmp_name) :
-            return tmp_name;
+#def generate_tmp_filename_with_suffix( suffix) :
+#    while True :
+#        tmp_name = "__tmp_" + str( random.randint( 1000000, 9999999)) + suffix;
+#        if not os.path.exists( tmp_name) :
+#            return tmp_name;
 
 def guess_width( original, pixel_bytes, args) :
     pixel_count = len( original) // pixel_bytes;
@@ -343,6 +343,14 @@ def prepare_save( info, args) :
     else :
         info[ "output"] = path;
 
+def encode_image( path, ext, mat) :
+    # use imencode() instead of imwrite() to avoid failure of opencv with non-ascii path:
+    ret, data = cv.imencode( ext, mat);
+    if not ret :
+        print( "Warning: fail to encode '" + path + "'.");
+        return;
+    data.tofile( path);
+
 # mat is single-channel-float32(0~255) or BGR or BGRA:
 def save_mat( mat, info, args) :
     if os.path.exists( info[ "output"]) and not args.force :
@@ -357,19 +365,9 @@ def save_mat( mat, info, args) :
     if args.output_yuv_range and not args.output_yuv_range.startswith( "full") :
         yuv_fullrange = False;
     if args.output_type == "jpg" :
-        if info[ "output"].lower().endswith( ".jpg") or info[ "output"].lower().endswith( ".jpeg") :
-            cv.imwrite( info[ "output"], mat);
-        else :
-            tmp_name = generate_tmp_filename_with_suffix( ".jpg");
-            cv.imwrite( tmp_name, mat);
-            os.rename( tmp_name, info[ "output"]);
+        encode_image( info[ "output"], ".jpg", mat);
     elif args.output_type == "png" :
-        if info[ "output"].lower().endswith( ".png"):
-            cv.imwrite( info[ "output"], mat);
-        else :
-            tmp_name = generate_tmp_filename_with_suffix( ".png");
-            cv.imwrite( tmp_name, mat);
-            os.rename( tmp_name, info[ "output"]);
+        encode_image( info[ "output"], ".png", mat);
     elif args.output_type == "8u" :
         if info[ "channel"] == 3 :
             mat = cv.cvtColor( mat, cv.COLOR_BGR2GRAY);
@@ -640,11 +638,20 @@ def process( filename, args) :
     if not os.path.isfile( filename) :
         print( "Warning: input file '" + filename + "' does not exist, ignored.");
         return;
+    try :
+        array = np.fromfile( filename, dtype = np.uint8);
+    except :
+        print( "Warning: cannot read from file '" + filename + "', ignored.");
+        return;
+
     if args.input_type in [ "jpg", "png"] :
-        mat = cv.imread( filename, cv.IMREAD_UNCHANGED);
+        # use imdecode() instead of imread() to avoid failure of opencv with non-ascii path
+        mat = cv.imdecode( array, cv.IMREAD_UNCHANGED);
+        if mat is None :
+            print( "Warning: fail to decode image '" + filename + "', ignored.");
+            return;
         process_image( mat, filename, args);
     else :
-        array = np.fromfile( filename, dtype = np.uint8);
         process_raw( array, filename, args);
 
 def main( args) :
