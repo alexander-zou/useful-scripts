@@ -1,0 +1,88 @@
+#!/bin/bash
+
+###
+# Copyright (c) 2018 Face++, Megvii. All Rights Reserved
+# 
+# @File   : min   
+# @Author : zoujiachen@megvii.com   
+# @Date   : 2018-11-08 16:00   
+# @Usage  : cat data.txt | min
+#           min NUMBER [NUMBER...]
+###
+
+PROGRAM="$0"
+NUM_REGEX="\-{0,1}\d*[\.]{0,1}\d+"
+
+Help()
+{
+	echo -en "Usage:\n\t"
+	echo     "$PROGRAM -h           # Show this message"
+	echo -en "\t"
+	echo     "$PROGRAM NUM [NUM...] # Calculate min(NUM...)"
+	echo -en "\t"
+	echo     "$PROGRAM              # Read numbers from stdin"
+	echo
+	echo -e "Note:\tDo NOT support scientific notation."
+	exit 1
+}
+
+FIRST_NUMBER=1
+RESULT=0
+
+Process()
+{
+	local num="$1"
+	if [ "$FIRST_NUMBER" -ne 0 ]
+	then
+		RESULT="$num"
+		FIRST_NUMBER=0
+	else
+		local comp=`echo "$num < $RESULT" | bc -l`
+		if [ "$comp" -ne 0 ]
+		then
+			RESULT="$num"
+		fi
+	fi
+}
+
+ProcessLines()
+{
+	while read num
+	do
+		Process $num
+	done
+	if [ "$FIRST_NUMBER" -ne 0 ]
+	then
+		echo "Error: no input." >&2
+		exit 1
+	else
+		echo "$RESULT"
+	fi
+}
+
+# Here we go:
+
+if [ "$#" -ge 1 ]
+then
+	if [ "$1" == '-h' ]
+	then
+		Help
+	fi
+	while [ "$#" -ge 1 ]
+	do
+		num="$1"
+		shift
+		if [[ "$num" =~ ^\-{0,1}[0-9]*[\.]{0,1}[0-9]+$ ]]
+		then
+			echo "$num"
+		else
+			echo "Error: '$num' is not a number, ignored." >&2
+		fi
+	done | ProcessLines
+else # read from stdin
+	egrep -o '\-{0,1}\d*[\.]{0,1}\d+' | ProcessLines
+fi
+
+
+# End of 'min' 
+

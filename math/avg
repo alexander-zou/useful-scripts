@@ -1,0 +1,73 @@
+#!/bin/bash
+
+###
+# Copyright (c) 2018 Face++, Megvii. All Rights Reserved
+# 
+# @File   : min   
+# @Author : zoujiachen@megvii.com   
+# @Date   : 2018-11-08 16:28
+# @Usage  : cat data.txt | avg
+#           avg NUMBER [NUMBER...]
+###
+
+PROGRAM="$0"
+NUM_REGEX="\-{0,1}\d*[\.]{0,1}\d+"
+
+Help()
+{
+	echo -en "Usage:\n\t"
+	echo     "$PROGRAM -h           # Show this message"
+	echo -en "\t"
+	echo     "$PROGRAM NUM [NUM...] # Calculate average(NUM...)"
+	echo -en "\t"
+	echo     "$PROGRAM              # Read numbers from stdin"
+	echo
+	echo -e "Note:\tDo NOT support scientific notation."
+	exit 1
+}
+
+SUM=0
+COUNT=0
+
+ProcessLines()
+{
+	while read num
+	do
+		SUM=$(echo "$num + $SUM" | bc -l)
+		COUNT=$(($COUNT + 1))
+	done
+	if [ "$COUNT" -ne 0 ]
+	then
+		echo "$SUM / $COUNT" | bc -l
+	else
+		echo 0
+		exit 1
+	fi
+}
+
+# Here we go:
+
+if [ "$#" -ge 1 ]
+then
+	if [ "$1" == '-h' ]
+	then
+		Help
+	fi
+	while [ "$#" -ge 1 ]
+	do
+		num="$1"
+		shift
+		if [[ "$num" =~ ^\-{0,1}[0-9]*[\.]{0,1}[0-9]+$ ]]
+		then
+			echo "$num"
+		else
+			echo "Error: '$num' is not a number, ignored." >&2
+		fi
+	done | ProcessLines
+else # read from stdin
+	egrep -o '\-{0,1}\d*[\.]{0,1}\d+' | ProcessLines
+fi
+
+
+# End of 'min' 
+
