@@ -30,6 +30,7 @@ IMAGE_TYPES = [
     "nv12",
     "jpg",
     "png",
+    "bmp"
 ];
 YUV_COLOR_STDS = [ "bt601", "bt709", "bt2020"];
 YUV_RANGES = [
@@ -338,6 +339,8 @@ def prepare_save( info, args) :
             info[ "output"] = path + "/" + info[ "filename"] + ".jpg";
         elif args.output_type == "png" :
             info[ "output"] = path + "/" + info[ "filename"] + ".png";
+        elif args.output_type == "bmp" :
+            info[ "output"] = path + "/" + info[ "filename"] + ".bmp";
         elif args.output_type == "nv21" :
             info[ "output"] = path + "/" + info[ "filename"] + ".nv21";
         elif args.output_type == "nv12" :
@@ -374,6 +377,8 @@ def save_mat( mat, info, args) :
         encode_image( info[ "output"], ".jpg", mat);
     elif args.output_type == "png" :
         encode_image( info[ "output"], ".png", mat);
+    elif args.output_type == "bmp" :
+        encode_image( info[ "output"], ".bmp", mat);
     elif args.output_type == "8u" :
         if info[ "channel"] == 3 :
             mat = cv.cvtColor( mat, cv.COLOR_BGR2GRAY);
@@ -650,7 +655,7 @@ def process( filename, args) :
         print( "Warning: cannot read from file '" + filename + "', ignored.");
         return;
 
-    if args.input_type in [ "jpg", "png"] :
+    if args.input_type in [ "jpg", "png", "bmp"] :
         # use imdecode() instead of imread() to avoid failure of opencv with non-ascii path
         mat = cv.imdecode( array, cv.IMREAD_UNCHANGED);
         if mat is None :
