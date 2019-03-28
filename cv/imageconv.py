@@ -107,6 +107,7 @@ def guess_width( original, pixel_bytes, args) :
     min_width = int( math.floor( math.sqrt( pixel_count) / 2));
     max_width = pixel_count // min_width;
     peak = 0;
+    best_ratio = 1
     result = int( round( math.sqrt( pixel_count)));
     for width in range( min_width, max_width) :
         height = pixel_count // width;
@@ -125,6 +126,11 @@ def guess_width( original, pixel_bytes, args) :
         if probability > peak :
             peak = probability;
             result = width;
+        elif probability == peak :
+            ratio = abs( width / height - 1)
+            if ratio < best_ratio :
+                best_ratio = ratio
+                result = width
     return result;
 
 def normalize( mat, info, args) :
