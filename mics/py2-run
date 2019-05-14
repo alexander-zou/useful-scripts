@@ -93,6 +93,8 @@ NewFile() {
 	rm -rf $WORK_DIR/*
 	# Template Here :
 	echo '#!/usr/bin/env python2' >> "$SOURCE_FILE"
+	echo '# -*- coding: UTF-8 -*-' >> "$SOURCE_FILE"
+	echo >> "$SOURCE_FILE"
 	echo >> "$SOURCE_FILE"
 	chmod +x "$SOURCE_FILE"
 }
