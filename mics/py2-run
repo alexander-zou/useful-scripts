@@ -1,10 +1,9 @@
 #!/bin/bash
 
-# by zoujiachen@baidu.com
-# 2011-11-11 (such a beautiful day !!)
+# by zoujiachen@megvii.com
+# 2019-05-14
 
 EDITOR="vim"
-COMPILER="gcc -o"
 
 MY_NAME="$0"
 CMD="$1"
@@ -12,48 +11,27 @@ shift
 OPTIONS="$*"
 MY_TTY=`tty`
 MY_TTY=`basename "$MY_TTY"`
-TEMP_DIR="$HOME/.c-run"
+TEMP_DIR="$HOME/.py2-run"
 WORK_DIR="$TEMP_DIR/$MY_TTY"
-SOURCE_FILE="$WORK_DIR/source.c"
-TARGET_FILE="$WORK_DIR/a.out"
+SOURCE_FILE="$WORK_DIR/source.sh"
 
 NO_EDIT=""
 
 Help() {
 	echo -e
-	echo -e "Open $EDITOR for you to write short C code, then compile & run it immediately."
+	echo -e "Open $EDITOR for you to write short Python code, then run it immediately."
 	echo -e
 	echo -e "USAGE:"
-	echo -e "\\t\\t$MY_NAME COMMAND [GCC_OPTIONS]"
+	echo -e "\\t\\t$MY_NAME COMMAND"
 	echo -e
 	echo -e "COMMAND:"
 	echo -e "\\t\\tnew\\t- start from an empty pattern"
 	echo -e "\\t\\tlast\\t- continue with source file saved last time"
-	echo -e "\\t\\tagain\\t- compile & run last program again directly"
+	echo -e "\\t\\tagain\\t- run last program again directly"
 	echo -e "\\t\\tpath\\t- show path of source file"
 	echo -e "\\t\\thelp\\t- show this information"
 	echo -e
-	echo -e "GCC_OPTIONS:"
-	echo -e "\\t\\tall other options will pass to compiler"
-	echo -e
 	exit 1
-}
-
-Question() {
-	while [[ 1 ]]
-	do
-		Print 'PINK' "$1"
-		default_value="$2"
-		read line
-		if [ "${#default_value}" -gt '0' -a "${#line}" -eq '0' ]
-		then
-			return $default_value
-		fi
-		case "${line:0:1}" in
-			y|Y )	return 1;;
-			n|N )	return 0;;
-		esac
-	done
 }
 
 Print() {
@@ -72,6 +50,23 @@ Print() {
 		*		) color="00";;
 	esac
 	printf '\033[%s;1m%s\033[0m\n' "$color" "$*"
+}
+
+Question() {
+	while [[ 1 ]]
+	do
+		Print 'PINK' "$1"
+		default_value="$2"
+		read line
+		if [ "${#default_value}" -gt '0' -a "${#line}" -eq '0' ]
+		then
+			return $default_value
+		fi
+		case "${line:0:1}" in
+			y|Y )	return 1;;
+			n|N )	return 0;;
+		esac
+	done
 }
 
 NewFile() {
@@ -97,27 +92,9 @@ NewFile() {
 	fi
 	rm -rf $WORK_DIR/*
 	# Template Here :
-	echo '#include <stdio.h>' >> "$SOURCE_FILE"
-	echo '#include <stdlib.h>' >> "$SOURCE_FILE"
-	echo '#include <string.h>' >> "$SOURCE_FILE"
-	echo '#include <limits.h>' >> "$SOURCE_FILE"
-	echo '#include <errno.h>' >> "$SOURCE_FILE"
-	echo '#include <time.h>' >> "$SOURCE_FILE"
-	echo '#include <signal.h>' >> "$SOURCE_FILE"
-	echo '#include <setjmp.h>' >> "$SOURCE_FILE"
+	echo '#!/usr/bin/env python2' >> "$SOURCE_FILE"
 	echo >> "$SOURCE_FILE"
-	echo '#include <unistd.h>' >> "$SOURCE_FILE"
-	echo '#include <fcntl.h>' >> "$SOURCE_FILE"
-	echo '#include <sys/types.h>' >> "$SOURCE_FILE"
-	echo '#include <sys/stat.h>' >> "$SOURCE_FILE"
-	echo '#include <sys/socket.h>' >> "$SOURCE_FILE"
-	echo '#include <sys/time.h>' >> "$SOURCE_FILE"
-	echo >> "$SOURCE_FILE"
-	echo 'int main()' >> "$SOURCE_FILE"
-	echo '{' >> "$SOURCE_FILE"
-	echo '	return 0;' >> "$SOURCE_FILE"
-	echo '}' >> "$SOURCE_FILE"
-	echo >> "$SOURCE_FILE"
+	chmod +x "$SOURCE_FILE"
 }
 
 case "$CMD" in
@@ -148,16 +125,9 @@ esac
 
 if [ ! "$NO_EDIT" ]
 then
-	START_LINE=$(egrep -n '^\s*int\s+main\s*\(' "$SOURCE_FILE" | egrep -o '^\d+')
-	if [ "$?" -ne '0' ]
-	then
-		START_LINE=1
-	else
-		START_LINE=$((START_LINE+2))
-	fi
 	if [ "$EDITOR" == "vi" -o "$EDITOR" == "vim" -o "$EDITOR" == "gvim" ]
 	then
-		$EDITOR "$SOURCE_FILE" "+$START_LINE"
+		$EDITOR "$SOURCE_FILE" "+999999"
 	else
 		$EDITOR "$SOURCE_FILE"
 	fi
@@ -169,32 +139,16 @@ then
 	fi
 fi
 
-Print 'LBLUE' "Compiling ..."
-rm -rf "$TARGET_FILE"
-$COMPILER "$TARGET_FILE" "$SOURCE_FILE" $OPTIONS
-ret="$?"
-if [ "$ret" -ne "0" ]
-then
-	Print 'RED' "ERROR: compiler($COMPILER) returned $ret." >&2
-	exit "$ret"
-fi
-
-if [ ! -x "$TARGET_FILE" ]
-then
-	Print 'RED' "ERROR: cannot found executable binary created by compiler." >&2
-	exit 1
-fi
-
 args=""
-if [ "`egrep -o '(^|\\s)main\\s*\\(.*,.*\\)' \"$SOURCE_FILE\" 2> /dev/null`" ]
+if [ $(egrep -c 'sys\.argv' "$SOURCE_FILE") -gt 0 ]
 then
-	Print 'LBLUE' "Please enter arguments for launching your program:"
+	Print 'PINK' "Please enter arguments for launching your script:"
 	read args
 fi
 
 Print 'LBLUE' "Launching ..."
 Print 'YELLOW' "================= OUTPUT ================="
-bash -c "\"$TARGET_FILE\" $args"
+bash -c "python2 \"$SOURCE_FILE\" $args"
 ret="$?"
 Print 'YELLOW' "=========================================="
 if [ "$ret" -ne "0" ]

@@ -48,12 +48,30 @@ Help() {
 	echo -e "\\t\\tnew\\t- start from an empty pattern"
 	echo -e "\\t\\tlast\\t- continue with source file saved last time"
 	echo -e "\\t\\tagain\\t- compile & run last program again directly"
+	echo -e "\\t\\tpath\\t- show path of source file"
 	echo -e "\\t\\thelp\\t- show this information"
 	echo -e
 	echo -e "G++_OPTIONS:"
 	echo -e "\\t\\tall other options will pass to compiler"
 	echo -e
 	exit 1
+}
+
+Question() {
+	while [[ 1 ]]
+	do
+		Print 'PINK' "$1"
+		default_value="$2"
+		read line
+		if [ "${#default_value}" -gt '0' -a "${#line}" -eq '0' ]
+		then
+			return $default_value
+		fi
+		case "${line:0:1}" in
+			y|Y )	return 1;;
+			n|N )	return 0;;
+		esac
+	done
 }
 
 Print() {
@@ -80,6 +98,20 @@ NewFile() {
 	if [ "$?" -ne "0" ]
 	then
 		Print 'RED' "ERROR: fail to create tempory directory, try 'rm -rf $TEMP_DIR' to fix it." >&2
+	fi
+	if [ -f "$SOURCE_FILE" ]
+	then
+		now=$(date '+%s')
+		ts=$(date -r "$SOURCE_FILE" '+%s')
+		if [ "$(($now - $ts < 24 * 60 * 60))" -ne 0 ]
+		then
+			Question 'Sure to OVERWRITE your code with new file? [Y/n]' 1
+			if [ "$?" -eq 0 ]
+			then
+				Print 'YELLOW' 'Canceled.'
+				exit 1
+			fi
+		fi
 	fi
 	rm -rf $WORK_DIR/*
 	# Template Here :
@@ -174,6 +206,14 @@ case "$CMD" in
 				NewFile
 			fi
 			NO_EDIT="yes";;
+	path )  if [ ! -f "$SOURCE_FILE" ]
+			then
+				Print 'RED' "no old source file found."
+				exit 1
+			else
+				Print 'LBLUE' "$SOURCE_FILE"
+				exit 0
+			fi;;
 	* )		Print 'RED' "ERROR: you need to provide a command, see '$MY_NAME help' for help." >&2
 			exit 1;;
 esac
