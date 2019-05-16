@@ -1,0 +1,135 @@
+#!/bin/bash
+
+###
+# 
+# @File   : adbw
+# @Author : zoujiachen@megvii.com   
+# @Date   : 2019-05-16 11:03   
+# @Brief  : an adb wrapper with improvements:
+#           1. ask which device to proceed command with when not sure
+#           2. pull command support wildcard characters
+# @Usage  : same as original adb
+# 
+###
+
+cmd="$1"
+
+devices=$(adb devices | egrep -o '^[0-9a-zA-Z]{6,20}\s+device$' | wc -l)
+serial=""
+
+DoAdb() {
+    if [[ -z "$serial" ]]
+    then
+        adb "$@"
+        return $?
+    else
+        adb -s "$serial" "$@"
+        return $?
+    fi
+}
+
+AskSerialNo() {
+    read -a sn_arr <<< $(adb devices | egrep -o '^[0-9a-zA-Z]{6,20}\s+device$' | egrep -o '^[0-9a-zA-Z]{6,20}')
+    for idx in "${!sn_arr[@]}"
+    do
+        manufacturer=$(adb -s "${sn_arr[$idx]}" shell getprop ro.product.manufacturer | tr -d '\n\r')
+        if [ -z "$manufacturer" ]
+        then
+            manufacturer=$(adb -s "${sn_arr[$idx]}" shell getprop ro.product.brand | tr -d '\n\r')
+        fi
+        model=$(adb -s "${sn_arr[$idx]}" shell getprop ro.product.model | tr -d '\n\r')
+        dev=$(adb -s "${sn_arr[$idx]}" shell getprop ro.product.device | tr -d '\n\r')
+        if [ -z "$dev" ]
+        then
+            dev=$(adb -s "${sn_arr[$idx]}" shell getprop ro.product.name | tr -d '\n\r')
+        fi
+        info_arr[$idx]="${manufacturer} ${model} ${dev} [${sn_arr[$idx]}]"
+    done
+    while [[ -z "$serial" ]]
+    do
+        echo "Select device to proceed:"
+        for idx in "${!info_arr[@]}"
+        do
+            echo "  $(($idx+1)): ${info_arr[$idx]}"
+        done
+        read line
+        if [[ -z $(echo "$line" | egrep -o '^\s*[0-9]+\s*$') ]]
+        then
+            match_count="0"
+            for idx in "${!info_arr[@]}"
+            do
+                if [[ $(echo "${info_arr[$idx]}" | grep -ci "$line") -gt 0 ]]
+                then
+                    match_count=$(($match_count + 1))
+                    serial=${sn_arr[$idx]}
+                fi
+            done
+            if [ "$match_count" -ne 1 ]
+            then
+                serial=""
+            fi
+        elif [[ "$line" -le "${#sn_arr[*]}" && "$line" -gt "0" ]]
+        then
+            idx=$(($line - 1))
+            serial="${sn_arr[$idx]}"
+        fi
+    done
+}
+
+DoWithSerialNo() {
+    if [[ "$devices" -gt 1 ]]
+    then
+        AskSerialNo
+    fi
+    DoAdb "$@"
+    exit $?
+}
+
+DoPull() {
+    if [[ "$devices" -gt 1 ]]
+    then
+        AskSerialNo
+    fi
+    if [[ "$1" = "-a" ]]
+    then
+        shift
+        preserve_ts_mode=1
+    else
+        preserve_ts_mode=0
+    fi
+    dst_path="./"
+    src_count=1
+    if [[ "$#" -gt 1 ]]
+    then
+        dst_path="${@:$#:1}"
+        src_count=$(($#-1))
+    elif [[ "$#" -le 0 ]]
+    then
+        DoAdb pull "$@"
+        exit $?
+    fi
+    IFS=$'\n' list=($(DoAdb shell ls ${@:1:$src_count}))
+    if [[ $preserve_ts_mode -eq 0 ]]
+    then
+        DoAdb pull "${list[@]}" "$dst_path"
+        exit $?
+    else
+        DoAdb pull -a "${list[@]}" "$dst_path"
+        exit $?
+    fi
+}
+
+case "$cmd" in
+    push|shell|emu|install|install-multiple|uninstall|logcat|remount|enable-verity|disable-verity|reboot|sideload|root|unroot|usb|tcpip )
+        DoWithSerialNo "$@"
+        ;;
+    pull )
+        shift
+        DoPull "$@"
+        ;;
+esac
+
+adb "$@"
+
+# End of 'iadb' 
+
