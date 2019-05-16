@@ -108,7 +108,7 @@ DoPull() {
         DoAdb pull "$@"
         exit $?
     fi
-    IFS=$'\n' list=($(DoAdb shell ls ${@:1:$src_count}))
+    IFS=$'\n' list=($(DoAdb shell ls -d ${@:1:$src_count}))
     if [[ $preserve_ts_mode -eq 0 ]]
     then
         DoAdb pull "${list[@]}" "$dst_path"
