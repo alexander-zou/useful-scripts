@@ -13,7 +13,7 @@ MY_TTY=`tty`
 MY_TTY=`basename "$MY_TTY"`
 TEMP_DIR="$HOME/.py3-run"
 WORK_DIR="$TEMP_DIR/$MY_TTY"
-SOURCE_FILE="$WORK_DIR/source.sh"
+SOURCE_FILE="$WORK_DIR/source.py"
 
 NO_EDIT=""
 
@@ -94,6 +94,16 @@ NewFile() {
 	# Template Here :
 	echo '#!/usr/bin/env python3' >> "$SOURCE_FILE"
 	echo '# -*- coding: UTF-8 -*-' >> "$SOURCE_FILE"
+	echo >> "$SOURCE_FILE"
+	echo 'import sys' >> "$SOURCE_FILE"
+	echo 'import os' >> "$SOURCE_FILE"
+	echo 'import random' >> "$SOURCE_FILE"
+	echo 'import math' >> "$SOURCE_FILE"
+	echo 'import time' >> "$SOURCE_FILE"
+	echo 'import shutil' >> "$SOURCE_FILE"
+	echo 'import argparse' >> "$SOURCE_FILE"
+	echo '#import cv2 as cv' >> "$SOURCE_FILE"
+	echo '#import numpy as np' >> "$SOURCE_FILE"
 	echo >> "$SOURCE_FILE"
 	echo >> "$SOURCE_FILE"
 	chmod +x "$SOURCE_FILE"
