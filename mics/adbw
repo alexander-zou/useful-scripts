@@ -28,6 +28,23 @@ DoAdb() {
     fi
 }
 
+Question() {
+	while [[ 1 ]]
+	do
+		echo "$1"
+		default_value="$2"
+		read line
+		if [ "${#default_value}" -gt '0' -a "${#line}" -eq '0' ]
+		then
+			return $default_value
+		fi
+		case "${line:0:1}" in
+			y|Y )	return 1;;
+			n|N )	return 0;;
+		esac
+	done
+}
+
 AskSerialNo() {
     read -a sn_arr <<< $(adb devices | egrep -o '^[0-9a-zA-Z]{6,20}\s+device$' | egrep -o '^[0-9a-zA-Z]{6,20}')
     for idx in "${!sn_arr[@]}"
@@ -85,6 +102,28 @@ DoWithSerialNo() {
     exit $?
 }
 
+DoInstall() {
+    if [[ "$devices" -gt 1 ]]
+    then
+        AskSerialNo
+    fi
+    result=$(DoAdb "$@" 2>&1)
+    retcode=$?
+    echo "$result" >&2
+    if [[ $(echo "$result" | egrep -c '(INSTALL_FAILED_UPDATE_INCOMPATIBLE|INSTALL_FAILED_ALREADY_EXISTS)') -gt 0 ]]
+    then
+        appid=$(echo "$result" | egrep -o '(Package|re-install) .* (signatures|without)' | egrep -o ' .* ' | egrep -o '[^ ]+' )
+        Question "Uninstall ${appid} & try again? [Y/n]" 1
+        if [ "$?" -eq 0 ]
+        then
+            exit $retcode
+        fi
+        DoAdb uninstall "$appid" && DoAdb "$@"
+        retcode="$?"
+    fi
+    exit $retcode
+}
+
 DoPull() {
     if [[ "$devices" -gt 1 ]]
     then
@@ -120,8 +159,11 @@ DoPull() {
 }
 
 case "$cmd" in
-    push|shell|emu|install|install-multiple|uninstall|logcat|remount|enable-verity|disable-verity|reboot|sideload|root|unroot|usb|tcpip )
+    push|shell|emu|install-multiple|uninstall|logcat|remount|enable-verity|disable-verity|reboot|sideload|root|unroot|usb|tcpip )
         DoWithSerialNo "$@"
+        ;;
+    install )
+        DoInstall "$@"
         ;;
     pull )
         shift
