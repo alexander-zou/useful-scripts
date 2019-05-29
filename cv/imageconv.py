@@ -459,24 +459,32 @@ def save_mat( mat, info, args) :
 
 
 def process_image( mat, filename, args) :
-    info = {};
-    info[ "height"] = int( mat.shape[ 0]);
-    info[ "width"] = int( mat.shape[ 1]);
-    info[ "channel"] = int( mat.shape[ 2]);
-    info[ "filename"] = os.path.basename( filename);
-    info[ "stride"] = 0;
-    info[ "scanline"] = 0;
-    b = mat[ :, :, 0];
-    g = mat[ :, :, 1];
-    r = mat[ :, :, 2];
-    info[ "b_range"] = "[" + str( b.min()) + "," + str( b.max()) + "]";
-    info[ "g_range"] = "[" + str( g.min()) + "," + str( g.max()) + "]";
-    info[ "r_range"] = "[" + str( r.min()) + "," + str( r.max()) + "]";
-    if info[ "channel"] >= 4 :
-        a = mat[ :, :, 3];
-        info[ "a_range"] = "[" + str( a.min()) + "," + str( a.max()) + "]";
-    prepare_save( info, args);
-    save_mat( mat, info, args);
+    info = {}
+    info[ "height"] = int( mat.shape[ 0])
+    info[ "width"] = int( mat.shape[ 1])
+    try:
+        info[ "channel"] = int( mat.shape[ 2])
+    except :
+        info[ "channel"] = 1
+    info[ "filename"] = os.path.basename( filename)
+    info[ "stride"] = 0
+    info[ "scanline"] = 0
+    if info[ "channel"] == 1 :
+        info[ "y_range"] = "[" + str( mat.min()) + "," + str( mat.max()) + "]"
+        prepare_save( info, args)
+        save_mat( mat.astype( np.float), info, args)
+    elif info[ "channel"] >= 3:
+        b = mat[ :, :, 0]
+        g = mat[ :, :, 1]
+        r = mat[ :, :, 2]
+        info[ "b_range"] = "[" + str( b.min()) + "," + str( b.max()) + "]"
+        info[ "g_range"] = "[" + str( g.min()) + "," + str( g.max()) + "]"
+        info[ "r_range"] = "[" + str( r.min()) + "," + str( r.max()) + "]"
+        if info[ "channel"] >= 4 :
+            a = mat[ :, :, 3]
+            info[ "a_range"] = "[" + str( a.min()) + "," + str( a.max()) + "]"
+        prepare_save( info, args)
+        save_mat( mat, info, args)
 
 def get_size( array, info, args) :
     # get stride and scanline:
@@ -659,8 +667,8 @@ def process( filename, args) :
         # use imdecode() instead of imread() to avoid failure of opencv with non-ascii path
         mat = cv.imdecode( array, cv.IMREAD_UNCHANGED);
         if mat is None :
-            print( "Warning: fail to decode image '" + filename + "', ignored.");
-            return;
+            print( "Warning: fail to decode image '" + filename + "', ignored.")
+            return
         process_image( mat, filename, args);
     else :
         process_raw( array, filename, args);
