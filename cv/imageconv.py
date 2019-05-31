@@ -4,19 +4,19 @@
 # 2018-08-15
 
 
-import sys;
-import os;
-import glob;
-import random;
-import argparse;
-import cv2 as cv;
-import math;
-import numpy as np;
+import sys
+import os
+import glob
+import random
+import argparse
+import cv2 as cv
+import math
+import numpy as np
 
-DESC_STR = "Convert image(s) as designated format.";
+DESC_STR = "Convert image(s) as designated format."
 USAGE_STR = "imageconv.py [-h] [-p PATH] [-c COL] [-r ROW] [-s STRIDE] [-l SCANLINE] " + \
             "-i FORMAT -o FORMAT [-n NORMALIZE] " + \
-            "[--] FILE [FILE ...]";
+            "[--] FILE [FILE ...]"
 IMAGE_TYPES = [
     "8u",
     "16u",
@@ -31,12 +31,12 @@ IMAGE_TYPES = [
     "jpg",
     "png",
     "bmp"
-];
-YUV_COLOR_STDS = [ "bt601", "bt709", "bt2020"];
+]
+YUV_COLOR_STDS = [ "bt601", "bt709", "bt2020"]
 YUV_RANGES = [
     "fullrange", "fullswing",
     "videorange", "studioswing",
-];
+]
 
 def verbose( info) :
     print( info[ "filename"] + ":");
