@@ -1,0 +1,139 @@
+#!/bin/bash
+
+###
+# 
+# @File   : slink
+# @Author : zoujiachen@megvii.com   
+# @Date   : 2019-05-31 11:23   
+# @Brief  : Much like "ln -s" but fills path according to destination
+# @Usage  : see "slink -h"
+# 
+###
+
+prog="$0"
+
+Usage() {
+    echo 'USAGE:'
+    echo -e "\t${prog} [-h]"
+    echo -e "\t${prog} [-a] \033[4mSOURCE\033[0m... \033[4mTARGET\033[0m"
+    echo
+    echo 'DESCRIPT:'
+    echo -e "\tCreate symbolic link(s) of each \033[4mSOURCE\033[0m to/into \033[4mTARGET\033[0m."
+    echo -e "\tCreated link(s) will contain path relative to the \033[4mTARGET\033[0m directory."
+    echo
+    echo 'OPTIONS:'
+    echo -e "\t-a\tforce using absolute path."
+    echo -e "\t-h\tshow this message."
+    echo
+    exit 1
+}
+
+Fullpath() {
+    dir="$(dirname "$1")"
+    file="$(basename "$1")"
+    if [[ -d "$dir" ]]
+    then
+        fullpath="$(cd "$dir" && pwd)/$file"
+        if [[ $? -eq 0 ]]
+        then
+            echo "$fullpath"
+        fi
+    fi
+}
+
+# get $1's path relative to $2
+RelaPath() {
+    path="$1"
+    base="$2"
+    if [[ ! -d "$base" ]]
+    then
+        base="$(dirname "$base")"
+    fi
+    result=
+    while [[ "$path" != "${base}"* ]]
+    do
+        result="../${result}"
+	base="$(dirname "$base")"
+    done
+    if [[ "$base" != "*/" && "$base" != "/" ]]
+    then
+	    base="$base/"
+    fi
+    result="${result}${path#$base}"
+    echo "$result"
+}
+
+if [[ "$#" -eq 0 || "$1" = "-h" ]]
+then
+    Usage
+fi
+
+force_fullpath=
+if [[ "$1" = "-a" ]]
+then
+    force_fullpath=yes
+    shift
+fi
+
+if [[ "$1" = "--" ]]
+then
+    shift
+fi
+
+if [[ "$#" -lt 2 ]]
+then
+    echo "${prog}: need more arguments to proceed, see '${prog} -h' for instructions." >&2
+    exit 1
+fi
+
+dst="${@:$#:1}"
+src_count="$(($#-1))"
+
+dst_is_dir=
+if [[ -d "$dst" ]]
+then
+    dst_is_dir=yes
+fi
+
+if [[ "$src_count" -gt 1 && -z "$dst_is_dir" ]]
+then
+    echo "${prog}: '${dst}' is not a directory, see '${prog} -h' for instructions." >&2
+    exit 1
+fi
+
+full_dst="$(Fullpath "$dst")"
+if [[ -z "$full_dst" ]]
+then
+    echo "${prog}: invalid target path: '${dst}'" >&2
+    exit 1 
+fi
+
+while [[ "$#" -ge 2 ]]
+do
+    src="$1"
+    full_src="$(Fullpath "$src")"
+    if [[ -z "$full_src" ]]
+    then
+        echo "${prog}: invalid source path: '${src}'" >&2
+        exit 1
+    fi
+    if [[ "$force_fullpath" ]]
+    then
+        ln -s "$full_src" "$dst"
+        if [[ "$?" -ne 0 ]]
+        then
+            exit $?
+        fi
+    else
+        rela_path="$(RelaPath "$full_src" "$full_dst")"
+        ln -s "$rela_path" "$dst"
+        if [[ "$?" -ne 0 ]]
+        then
+            exit $?
+        fi
+    fi
+    shift
+done
+
+# End of 'lns' 
+

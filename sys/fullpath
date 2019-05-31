@@ -1,0 +1,40 @@
+#!/bin/bash
+
+###
+# 
+# @File   : fullpath   
+# @Author : zoujiachen@megvii.com   
+# @Date   : 2019-05-31 11:33   
+# @Brief  : Much like "ls -1d" but shows full path of arguments
+# @Usage  : fullpath PATH...
+# 
+###
+
+myname="$0"
+err_count=0
+
+while [[ $# -gt 0 ]]
+do
+    dir="$(dirname "$1")"
+    file="$(basename "$1")"
+    if [[ -d "$dir" ]]
+    then
+        fullpath="$(cd "$dir" && pwd)/$file"
+        if [[ $? -eq 0 ]]
+        then
+            echo "$fullpath"
+        else
+            echo "$myname: failed to enter directory '$dir'" >&2
+            err_count=$(($err_count+1))
+        fi
+    else
+        echo "$myname: '$dir' not a directory" >&2
+        err_count=$(($err_count+1))
+    fi
+    shift
+done
+
+exit $err_count
+
+# End of 'fullpath' 
+
