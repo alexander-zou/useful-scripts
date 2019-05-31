@@ -8,7 +8,7 @@
 # @Brief  : an adb wrapper with improvements:
 #           1. ask which device to proceed command with when not sure
 #           2. pull command support wildcard characters
-#           3. install command could help you uninstall package if necessary
+#           3. install command could help you with uninstalling if necessary
 # @Usage  : same as original adb
 # 
 ###
@@ -178,5 +178,5 @@ esac
 
 adb "$@"
 
-# End of 'iadb' 
+# End of 'adbw' 
 

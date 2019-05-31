@@ -135,5 +135,5 @@ do
     shift
 done
 
-# End of 'lns' 
+# End of 'slink' 
 
