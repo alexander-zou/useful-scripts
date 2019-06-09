@@ -27,7 +27,7 @@ Help() {
 	echo -e "\\t\\t$MY_NAME COMMAND [GCC_OPTIONS]"
 	echo -e
 	echo -e "COMMAND:"
-	echo -e "\\t\\tnew\\t- start from an empty pattern"
+	echo -e "\\t\\tnew\\t- start empty source from scratch"
 	echo -e "\\t\\tlast\\t- continue with source file saved last time"
 	echo -e "\\t\\tagain\\t- compile & run last program again directly"
 	echo -e "\\t\\tpath\\t- show path of source file"
