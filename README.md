@@ -1,2 +1,2 @@
 # useful-scripts
-useful tools for my daily work
+useful tools from and for my daily work

@@ -100,6 +100,7 @@ NewFile() {
 	echo 'import random' >> "$SOURCE_FILE"
 	echo 'import math' >> "$SOURCE_FILE"
 	echo 'import time' >> "$SOURCE_FILE"
+	echo 'import re' >> "$SOURCE_FILE"
 	echo 'import shutil' >> "$SOURCE_FILE"
 	echo 'import argparse' >> "$SOURCE_FILE"
 	echo '#import cv2 as cv' >> "$SOURCE_FILE"
