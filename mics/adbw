@@ -51,13 +51,13 @@ AskSerialNo() {
     for idx in "${!sn_arr[@]}"
     do
         manufacturer=$(adb -s "${sn_arr[$idx]}" shell getprop ro.product.manufacturer | tr -d '\n\r')
-        if [ -z "$manufacturer" ]
+        if [[ -z "$manufacturer" ]]
         then
             manufacturer=$(adb -s "${sn_arr[$idx]}" shell getprop ro.product.brand | tr -d '\n\r')
         fi
         model=$(adb -s "${sn_arr[$idx]}" shell getprop ro.product.model | tr -d '\n\r')
         dev=$(adb -s "${sn_arr[$idx]}" shell getprop ro.product.device | tr -d '\n\r')
-        if [ -z "$dev" ]
+        if [[ -z "$dev" ]]
         then
             dev=$(adb -s "${sn_arr[$idx]}" shell getprop ro.product.name | tr -d '\n\r')
         fi
@@ -82,7 +82,7 @@ AskSerialNo() {
                     serial=${sn_arr[$idx]}
                 fi
             done
-            if [ "$match_count" -ne 1 ]
+            if [[ "$match_count" -ne 1 ]]
             then
                 serial=""
             fi
@@ -123,6 +123,36 @@ DoInstall() {
         retcode="$?"
     fi
     exit $retcode
+}
+
+DoDevices() {
+    if [[ "$#" -gt 0 ]]
+    then
+        adb devices $@
+        exit $?
+    fi
+    read -a sn_arr <<< $(adb devices | egrep -o '^[0-9a-zA-Z]{6,20}\s+device$' | egrep -o '^[0-9a-zA-Z]{6,20}')
+    for idx in "${!sn_arr[@]}"
+    do
+        manufacturer=$(adb -s "${sn_arr[$idx]}" shell getprop ro.product.manufacturer | tr -d '\n\r')
+        if [[ -z "$manufacturer" ]]
+        then
+            manufacturer=$(adb -s "${sn_arr[$idx]}" shell getprop ro.product.brand | tr -d '\n\r')
+        fi
+        model=$(adb -s "${sn_arr[$idx]}" shell getprop ro.product.model | tr -d '\n\r')
+        dev=$(adb -s "${sn_arr[$idx]}" shell getprop ro.product.device | tr -d '\n\r')
+        if [[ -z "$dev" ]]
+        then
+            dev=$(adb -s "${sn_arr[$idx]}" shell getprop ro.product.name | tr -d '\n\r')
+        fi
+        info_arr[$idx]="${manufacturer} ${model} ${dev} [${sn_arr[$idx]}]"
+    done
+    echo "List of devices attached"
+    for idx in "${!info_arr[@]}"
+    do
+        echo "  $(($idx+1)): ${info_arr[$idx]}"
+    done
+    exit 0
 }
 
 DoPull() {
@@ -173,6 +203,10 @@ case "$cmd" in
     pull )
         shift
         DoPull "$@"
+        ;;
+    devices )
+        shift
+        DoDevices "$@"
         ;;
 esac
 
