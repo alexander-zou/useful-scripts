@@ -47,6 +47,10 @@ Question() {
 }
 
 AskSerialNo() {
+    if [[ "$ANDROID_SERIAL" ]]
+    then
+        return
+    fi
     read -a sn_arr <<< $(adb devices | egrep -o '^[0-9a-zA-Z]{6,20}\s+device$' | egrep -o '^[0-9a-zA-Z]{6,20}')
     for idx in "${!sn_arr[@]}"
     do
@@ -128,7 +132,7 @@ DoInstall() {
 DoDevices() {
     if [[ "$#" -gt 0 ]]
     then
-        adb devices $@
+        DoAdb devices $@
         exit $?
     fi
     read -a sn_arr <<< $(adb devices | egrep -o '^[0-9a-zA-Z]{6,20}\s+device$' | egrep -o '^[0-9a-zA-Z]{6,20}')
@@ -194,7 +198,7 @@ DoPull() {
 }
 
 case "$cmd" in
-    push|shell|emu|install-multiple|uninstall|logcat|remount|enable-verity|disable-verity|reboot|sideload|root|unroot|usb|tcpip )
+    push|shell|install-multiple|uninstall|backup|restore|logcat|remount|enable-verity|disable-verity|reboot|sideload|root|unroot|usb|tcpip )
         DoWithSerialNo "$@"
         ;;
     install )
