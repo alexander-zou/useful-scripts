@@ -9,14 +9,92 @@
 #           1. ask which device to proceed command with when not sure
 #           2. pull command support wildcard characters
 #           3. install command could help you with uninstalling if necessary
+#           4. recognize unambiguous prefix of adb commands
+#               e.g. 'sh' for 'shell', 'log' for 'logcat'
 # @Usage  : same as original adb
 # 
 ###
 
-cmd="$1"
+cmd=""
 
 devices=$(adb devices | egrep -o '^[0-9a-zA-Z]{6,20}\s+device$' | wc -l)
 serial=""
+
+# command completion:
+
+CMD_COMPLETE_LIST=(
+    devices
+    help
+    version
+    connect
+    disconnect
+    forward
+    ppp
+    reverse
+    push
+    pull
+    sync
+    shell
+    emu
+    install
+#    install-multiple
+    uninstall
+    backup
+    restore
+    bugreport
+#    jdwp
+    logcat
+    disable-verity
+    enable-verity
+    keygen
+    remount
+    reboot
+    sideload
+    root
+    unroot
+    usb
+    tcpip
+    start-server
+    kill-server
+    reconnect
+)
+
+found_exact_match=''
+
+for each_cmd in "${CMD_COMPLETE_LIST[@]}"
+do
+    if [[ "$1" = "$each_cmd" ]]
+    then
+        cmd="$1"
+        found_exact_match=yes
+        break
+    fi
+done
+
+if [[ -z "$found_exact_match" ]]
+then
+    prefix_matches=()
+    for each_cmd in "${CMD_COMPLETE_LIST[@]}"
+    do
+        if [[ "$each_cmd" = "$1"* ]]
+        then
+            prefix_matches=( "${prefix_matches[@]}" "$each_cmd" )
+        fi
+    done
+    if [[ "${#prefix_matches[@]}" -eq 1 ]]
+    then
+        cmd="${prefix_matches[0]}"
+    elif [[ "${#prefix_matches[@]}" -gt 1 ]]
+    then
+        echo "adbw: unknown command '$1', candidates are:" >&2
+        echo "    ${prefix_matches[@]}" >&2
+        exit 1
+    else
+        cmd="$1"
+    fi
+fi
+
+# functions:
 
 DoAdb() {
     if [[ -z "$serial" ]]
@@ -197,12 +275,16 @@ DoPull() {
     fi
 }
 
+# main:
+
 case "$cmd" in
     push|shell|install-multiple|uninstall|backup|restore|logcat|remount|enable-verity|disable-verity|reboot|sideload|root|unroot|usb|tcpip )
-        DoWithSerialNo "$@"
+        shift
+        DoWithSerialNo "$cmd" "$@"
         ;;
     install )
-        DoInstall "$@"
+        shift
+        DoInstall "$cmd" "$@"
         ;;
     pull )
         shift
@@ -212,9 +294,16 @@ case "$cmd" in
         shift
         DoDevices "$@"
         ;;
+    ?* )
+        shift
+        DoAdb "$cmd" "$@"
+        exit $?
+        ;;
+    *)
+        DoAdb "$@"
+        exit $?
+        ;;
 esac
-
-adb "$@"
 
 # End of 'adbw' 
 
