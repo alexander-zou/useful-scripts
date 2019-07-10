@@ -110,7 +110,7 @@ DoAdb() {
 Question() {
 	while [[ 1 ]]
 	do
-		echo "$1"
+		echo "$1" >&2
 		default_value="$2"
 		read line
 		if [ "${#default_value}" -gt '0' -a "${#line}" -eq '0' ]
@@ -147,10 +147,10 @@ AskSerialNo() {
     done
     while [[ -z "$serial" ]]
     do
-        echo "Select device to proceed:"
+        echo "Select device to proceed:" >&2
         for idx in "${!info_arr[@]}"
         do
-            echo "  $(($idx+1)): ${info_arr[$idx]}"
+            echo "  $(($idx+1)): ${info_arr[$idx]}"  >&2
         done
         read line
         if [[ -z $(echo "$line" | egrep -o '^\s*[0-9]+\s*$') ]]
