@@ -1,0 +1,139 @@
+#!/bin/bash
+
+###
+# 
+# @File   : show_ip   
+# @Author : zoujiachen@megvii.com   
+# @Date   : 2019-07-10 12:47   
+# @Brief  : show ipv4 addresses, see 'show_ip -h'.
+# 
+###
+
+PROGRAM="$0"
+
+# check for tools:
+
+which ifconfig > /dev/null 2>&1
+if [[ $? -eq 0 ]]
+then
+    HAS_TOOL_IFCONFIG=yes
+fi
+
+which ip > /dev/null 2>&1
+if [[ $? -eq 0 ]]
+then
+    HAS_TOOL_IP=yes
+fi
+
+# check arguments:
+SHOW_INTERFACE=yes
+SHOW_HIGHLIGHT=
+SPECIFIED_INTERFACE=
+while [ "$#" -ge 1 ]
+do
+    if [[ "$1" = '-h' ]]
+    then
+        echo -e "Usage:\t$PROGRAM [-h] [-o] [-c] [-i INTERFACE]"
+        echo "Options:"
+        echo -e "\t-h\tShow this message."
+        echo -e "\t-o\tPrint address only (without interface name)."
+        echo -e "\t-c\tPrint address with highlight color."
+        echo -e "\t-i\tSpecify interface name."
+        exit 1
+    elif [[ "$1" = '-o' ]]
+    then
+        SHOW_INTERFACE=
+    elif [[ "$1" = '-c' ]]
+    then
+        SHOW_HIGHLIGHT=yes
+    elif [[ "$1" = '-i' ]]
+    then
+        shift
+        if [[ "$#" -ge 1 ]]
+        then
+            SPECIFIED_INTERFACE="$1"
+        else
+            echo "interface name needed for option '-i'!" >&2
+            exit 1
+        fi
+    fi
+    shift
+done
+
+Print() {
+    address="$1"
+    interface="$2"
+    if [[ "$SPECIFIED_INTERFACE" && "$SPECIFIED_INTERFACE" != "$interface" ]]
+    then
+        return
+    fi
+    if [[ "$SHOW_HIGHLIGHT" ]]
+    then
+        if [[ "$SHOW_INTERFACE" ]]
+        then
+            echo -e "\033[31;1m${address}\033[0m [$interface]"
+        else
+            echo -e "\033[31;1m${address}\033[0m"
+        fi
+    else
+        if [[ "$SHOW_INTERFACE" ]]
+        then
+            echo "$address [$interface]"
+        else
+            echo "$address"
+        fi
+    fi
+    interfaces_count=$(($interfaces_count + 1))
+}
+
+# actual work:
+interfaces_count=0
+if [[ "$HAS_TOOL_IP" ]]
+then
+    cmd_result=$(ip -o -4 address show)
+    IFS=$'\n' cmd_result_lines=($cmd_result)
+    for line in ${cmd_result_lines[@]}
+    do
+        interface=$(echo "$line" | egrep -o '[0-9]+\:\s*[A-Za-z0-9]+' | egrep -o '[A-Za-z0-9]+$')
+        address=$(echo "$line" | egrep -o 'inet\s+[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | egrep -o '[0-9\.]+$')
+        if [[ "$interface" != 'lo'* ]]
+        then
+            Print "$address" "$interface"
+        fi
+    done
+elif [[ "$HAS_TOOL_IFCONFIG" ]]
+then
+    cmd_result=$(ifconfig -a inet)
+    IFS=$'\n' cmd_result_lines=($cmd_result)
+    interface=
+    for line in ${cmd_result_lines[@]}
+    do
+        if [[ $(echo "$line" | egrep -c '^[a-zA-Z0-9]+:') -eq 1 ]]
+        then
+            interface=$(echo "$line" | egrep -o '^[a-zA-Z0-9]+')
+        elif [[ $(echo "$line" | egrep -c '^\s+inet\s+[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+') -eq 1 ]]
+        then
+            address=$(echo "$line" | egrep -o '^\s+inet\s+[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | egrep -o '[0-9\.]+')
+            if [[ "$interface" && "$interface" != 'lo'* ]]
+            then
+                Print "$address" "$interface"
+                interface=
+                address=
+            fi
+        fi
+    done
+else
+    echo "failed to find command 'ip' or 'ifconfig'. Aborted." >&2
+    exit 1
+fi
+
+if [[ "$interfaces_count" -le 0 ]]
+then
+    echo "failed to retrieve any ipv4 address." >&2
+    exit 1
+fi
+
+exit 0
+
+# End of 'show_ip' 
+
