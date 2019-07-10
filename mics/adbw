@@ -275,6 +275,41 @@ DoPull() {
     fi
 }
 
+DoIp() {
+    if [[ "$devices" -gt 1 ]]
+    then
+        AskSerialNo
+    fi
+    result=$(DoAdb shell ifconfig)
+    IFS=$'\n' lines=($result)
+    ret=1
+    interface=
+    for line in ${lines[@]}
+    do
+        if [[ $(echo "$line" | egrep -c '^[a-zA-Z0-9]+(:| )') -eq 1 ]]
+        then
+            interface=$(echo "$line" | egrep -o '^[a-zA-Z0-9]+')
+        elif [[ $(echo "$line" | egrep -c '^\s+(inet\s+|inet addr:)[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+') -eq 1 ]]
+        then
+            address=$(echo "$line" | egrep -o '^\s+(inet\s+|inet addr:)[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | egrep -o '[0-9\.]+')
+            if [[ "$address" = '127.0.0.1' ]]
+            then
+                continue
+            fi
+            if [[ -t 1 ]]
+            then
+                echo -e "\033[31;1m${address}\033[0m [\033[36;3m$interface\033[0m]"
+            else
+                echo "$address [$interface]"
+            fi
+            interface=
+            address=
+            ret=0
+        fi
+    done
+    exit $ret
+}
+
 # main:
 
 case "$cmd" in
@@ -293,6 +328,10 @@ case "$cmd" in
     devices )
         shift
         DoDevices "$@"
+        ;;
+    ip )
+        shift
+        DoIp "$@"
         ;;
     ?* )
         shift
