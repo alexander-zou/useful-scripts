@@ -2,10 +2,10 @@
 
 ###
 # 
-# @File   : show-ip   
+# @File   : myip   
 # @Author : zoujiachen@megvii.com   
 # @Date   : 2019-07-10 12:47   
-# @Brief  : show ipv4 addresses, see 'show-ip -h'.
+# @Brief  : show ipv4 addresses, see 'myip -h'.
 # 
 ###
 
@@ -71,7 +71,7 @@ done
 Print() {
     address="$1"
     interface="$2"
-    if [[ "$SPECIFIED_INTERFACE" && "$SPECIFIED_INTERFACE" != "$interface" ]]
+    if [[ "$SPECIFIED_INTERFACE" && "$interface" != $SPECIFIED_INTERFACE ]]
     then
         return
     fi
@@ -111,17 +111,17 @@ then
     done
 elif [[ "$HAS_TOOL_IFCONFIG" ]]
 then
-    cmd_result=$(ifconfig -a inet)
+    cmd_result=$(ifconfig)
     IFS=$'\n' cmd_result_lines=($cmd_result)
     interface=
     for line in ${cmd_result_lines[@]}
     do
-        if [[ $(echo "$line" | egrep -c '^[a-zA-Z0-9]+:') -eq 1 ]]
+        if [[ $(echo "$line" | egrep -c '^[a-zA-Z0-9]+(:| )') -eq 1 ]]
         then
             interface=$(echo "$line" | egrep -o '^[a-zA-Z0-9]+')
-        elif [[ $(echo "$line" | egrep -c '^\s+inet\s+[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+') -eq 1 ]]
+        elif [[ $(echo "$line" | egrep -c '^\s+(inet\s+|inet addr:)[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+') -eq 1 ]]
         then
-            address=$(echo "$line" | egrep -o '^\s+inet\s+[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | egrep -o '[0-9\.]+')
+            address=$(echo "$line" | egrep -o '^\s+(inet\s+|inet addr:)[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | egrep -o '[0-9\.]+')
             if [[ "$interface" && "$interface" != 'lo'* ]]
             then
                 Print "$address" "$interface"
@@ -143,5 +143,5 @@ fi
 
 exit 0
 
-# End of 'show-ip' 
+# End of 'myip' 
 
