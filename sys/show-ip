@@ -2,10 +2,10 @@
 
 ###
 # 
-# @File   : show_ip   
+# @File   : show-ip   
 # @Author : zoujiachen@megvii.com   
 # @Date   : 2019-07-10 12:47   
-# @Brief  : show ipv4 addresses, see 'show_ip -h'.
+# @Brief  : show ipv4 addresses, see 'show-ip -h'.
 # 
 ###
 
@@ -27,7 +27,12 @@ fi
 
 # check arguments:
 SHOW_INTERFACE=yes
-SHOW_HIGHLIGHT=
+if [[ -t 1 ]]
+then
+    SHOW_HIGHLIGHT=yes
+else
+    SHOW_HIGHLIGHT=
+fi
 SPECIFIED_INTERFACE=
 while [ "$#" -ge 1 ]
 do
@@ -37,7 +42,7 @@ do
         echo "Options:"
         echo -e "\t-h\tShow this message."
         echo -e "\t-o\tPrint address only (without interface name)."
-        echo -e "\t-c\tPrint address with highlight color."
+        echo -e "\t-c\tForce to disable color."
         echo -e "\t-i\tSpecify interface name."
         exit 1
     elif [[ "$1" = '-o' ]]
@@ -45,7 +50,7 @@ do
         SHOW_INTERFACE=
     elif [[ "$1" = '-c' ]]
     then
-        SHOW_HIGHLIGHT=yes
+        SHOW_HIGHLIGHT=
     elif [[ "$1" = '-i' ]]
     then
         shift
@@ -53,9 +58,12 @@ do
         then
             SPECIFIED_INTERFACE="$1"
         else
-            echo "interface name needed for option '-i'!" >&2
+            echo "interface name needed for option '-i' !" >&2
             exit 1
         fi
+    else
+        echo "unknown option '$1' !" >&2
+        exit 1
     fi
     shift
 done
@@ -71,7 +79,7 @@ Print() {
     then
         if [[ "$SHOW_INTERFACE" ]]
         then
-            echo -e "\033[31;1m${address}\033[0m [$interface]"
+            echo -e "\033[31;1m${address}\033[0m [\033[36;3m$interface\033[0m]"
         else
             echo -e "\033[31;1m${address}\033[0m"
         fi
@@ -135,5 +143,5 @@ fi
 
 exit 0
 
-# End of 'show_ip' 
+# End of 'show-ip' 
 
