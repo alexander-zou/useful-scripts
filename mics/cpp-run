@@ -116,6 +116,8 @@ NewFile() {
 	rm -rf $WORK_DIR/*
 	# Template Here :
 	echo '#include <iostream>' >> "$SOURCE_FILE"
+	echo '#include <fstream>' >> "$SOURCE_FILE"
+	echo '#include <sstream>' >> "$SOURCE_FILE"
 	echo '#include <string>' >> "$SOURCE_FILE"
 	echo '#include <bitset>' >> "$SOURCE_FILE"
 	echo '#include <vector>' >> "$SOURCE_FILE"
