@@ -134,6 +134,7 @@ NewFile() {
 	echo '#include <functional>' >> "$SOURCE_FILE"
 	echo '#include <utility>' >> "$SOURCE_FILE"
 	echo '#include <typeinfo>' >> "$SOURCE_FILE"
+	echo '#include <iomanip>' >> "$SOURCE_FILE"
 	if [ "$CPP_STD" -ge 11 ]
 	then
 		echo '#include <chrono>' >> "$SOURCE_FILE"
@@ -170,9 +171,11 @@ NewFile() {
 	echo >> "$SOURCE_FILE"
 	echo '#include <cstdio>' >> "$SOURCE_FILE"
 	echo '#include <cstdlib>' >> "$SOURCE_FILE"
-	echo '#include <cstdint>' >> "$SOURCE_FILE"
+	echo '#include <cstdarg>' >> "$SOURCE_FILE"
 	echo '#include <cstring>' >> "$SOURCE_FILE"
+	echo '#include <cstdint>' >> "$SOURCE_FILE"
 	echo '#include <climits>' >> "$SOURCE_FILE"
+	echo '#include <cfloat>' >> "$SOURCE_FILE"
 	echo '#include <cerrno>' >> "$SOURCE_FILE"
 	echo '#include <ctime>' >> "$SOURCE_FILE"
 	echo '#include <csignal>' >> "$SOURCE_FILE"
@@ -180,6 +183,7 @@ NewFile() {
 	echo >> "$SOURCE_FILE"
 	echo '#include <unistd.h>' >> "$SOURCE_FILE"
 	echo '#include <fcntl.h>' >> "$SOURCE_FILE"
+	echo '#include <dirent.h>' >> "$SOURCE_FILE"
 	echo '#include <sys/types.h>' >> "$SOURCE_FILE"
 	echo '#include <sys/stat.h>' >> "$SOURCE_FILE"
 	echo '#include <sys/socket.h>' >> "$SOURCE_FILE"

@@ -99,7 +99,10 @@ NewFile() {
 	# Template Here :
 	echo '#include <stdio.h>' >> "$SOURCE_FILE"
 	echo '#include <stdlib.h>' >> "$SOURCE_FILE"
+	echo '#include <stdarg.h>' >> "$SOURCE_FILE"
 	echo '#include <string.h>' >> "$SOURCE_FILE"
+	echo '#include <stdint.h>' >> "$SOURCE_FILE"
+	echo '#include <float.h>' >> "$SOURCE_FILE"
 	echo '#include <limits.h>' >> "$SOURCE_FILE"
 	echo '#include <errno.h>' >> "$SOURCE_FILE"
 	echo '#include <time.h>' >> "$SOURCE_FILE"
@@ -108,6 +111,7 @@ NewFile() {
 	echo >> "$SOURCE_FILE"
 	echo '#include <unistd.h>' >> "$SOURCE_FILE"
 	echo '#include <fcntl.h>' >> "$SOURCE_FILE"
+	echo '#include <dirent.h>' >> "$SOURCE_FILE"
 	echo '#include <sys/types.h>' >> "$SOURCE_FILE"
 	echo '#include <sys/stat.h>' >> "$SOURCE_FILE"
 	echo '#include <sys/socket.h>' >> "$SOURCE_FILE"
