@@ -149,13 +149,7 @@ SetMode()
 	then
 		magic=""
 	else
-		local bin=`which $interpreter 2> /dev/null`
-		if [ "$bin" ]
-		then
-			magic="#!$bin"
-		else
-			magic=""
-		fi
+		magic="#!/usr/bin/env $interpreter"
 	fi
 }
 
