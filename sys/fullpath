@@ -22,6 +22,14 @@ do
         fullpath="$(cd "$dir" && pwd)/$file"
         if [[ $? -eq 0 ]]
         then
+            if [[ -d "$fullpath" ]]
+            then # in case '$file' is '.' or '..'
+                tmp=$(cd "$fullpath" && pwd)
+                if [[ $? -eq 0 ]]
+                then
+                    fullpath="$tmp"
+                fi
+            fi
             echo "$fullpath"
         else
             echo "$myname: failed to enter directory '$dir'" >&2
