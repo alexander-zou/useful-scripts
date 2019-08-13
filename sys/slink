@@ -36,6 +36,14 @@ Fullpath() {
         fullpath="$(cd "$dir" && pwd)/$file"
         if [[ $? -eq 0 ]]
         then
+            if [[ -d "$fullpath" ]]
+            then # in case '$file' is '.' or '..'
+                tmp=$(cd "$fullpath" && pwd)
+                if [[ $? -eq 0 ]]
+                then
+                    fullpath="$tmp"
+                fi
+            fi
             echo "$fullpath"
         fi
     fi
@@ -53,7 +61,7 @@ RelaPath() {
     while [[ "$path" != "${base}"* ]]
     do
         result="../${result}"
-	base="$(dirname "$base")"
+	    base="$(dirname "$base")"
     done
     if [[ "$base" != "*/" && "$base" != "/" ]]
     then
