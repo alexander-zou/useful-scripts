@@ -72,7 +72,12 @@ Print() {
 		BLACK	) color="38";;
 		*	) color="00";;
 	esac
-	printf '\033[%s;1m%s\033[0m\n' "$color" "$*"
+	if [[ -t 1 ]]
+	then
+		printf '\033[%s;1m%s\033[0m\n' "$color" "$*"
+	else
+		echo "$*"
+	fi
 }
 
 NewFile() {
