@@ -23,6 +23,7 @@ Usage() {
     echo
     echo 'OPTIONS:'
     echo -e "\t-a\tforce using absolute path."
+    echo -e "\t-f\toverwrite existing files."
     echo -e "\t-h\tshow this message."
     echo
     exit 1
@@ -71,27 +72,35 @@ RelaPath() {
     echo "$result"
 }
 
-if [[ "$#" -eq 0 || "$1" = "-h" ]]
-then
-    Usage
-fi
-
+force_overwrite=
 force_fullpath=
-if [[ "$1" = "-a" ]]
-then
-    force_fullpath=yes
-    shift
-fi
 
-if [[ "$1" = "--" ]]
-then
+while [[ "$#" -ge 1 && "${1:0:1}" = '-' ]]
+do
+    arg="$1"
     shift
-fi
+    if [[ "$arg" = '-a' ]]
+    then
+        force_fullpath=yes
+    elif [[ "$arg" = '-f' ]]
+    then
+        force_overwrite=yes
+    elif [[ "$arg" = '-h' ]]
+    then
+        Usage
+    elif [[ "$arg" = '--' ]]
+    then
+        break
+    else
+        echo "${prog}: unknown argument '$arg', see '${prog} -h' for instructions." >&2
+        exit 100
+    fi
+done
 
 if [[ "$#" -lt 2 ]]
 then
     echo "${prog}: need more arguments to proceed, see '${prog} -h' for instructions." >&2
-    exit 1
+    exit 101
 fi
 
 dst="${@:$#:1}"
@@ -106,25 +115,65 @@ fi
 if [[ "$src_count" -gt 1 && -z "$dst_is_dir" ]]
 then
     echo "${prog}: '${dst}' is not a directory, see '${prog} -h' for instructions." >&2
-    exit 1
+    exit 102
 fi
 
 full_dst="$(Fullpath "$dst")"
 if [[ -z "$full_dst" ]]
 then
     echo "${prog}: invalid target path: '${dst}'" >&2
-    exit 1 
+    exit 103
 fi
 
 while [[ "$#" -ge 2 ]]
 do
     src="$1"
+    shift
     full_src="$(Fullpath "$src")"
+
+    # check for source existence:
     if [[ -z "$full_src" ]]
     then
         echo "${prog}: invalid source path: '${src}'" >&2
-        exit 1
+        exit 104
     fi
+
+    # check for destination existence:
+    if [[ "$dst_is_dir" ]]
+    then
+        real_dst="$dst/$(basename $src)"
+    else
+        real_dst="$dst"
+    fi
+
+    # Note: $full_dst is absolute path of $dst,
+    #       $real_dst is $dst with necessary filename completion.
+    if [[ -e "$real_dst" || -L "$real_dst" ]]
+    then
+        if [[ "$force_overwrite" ]]
+        then
+            rm -rf "$real_dst"
+            if [[ $? -ne 0 ]]
+            then
+                exit $?
+            fi
+        else
+            echo "file '$real_dst' exists, overwrite it? [Y/n]" >&2
+            read line
+            if [[ "${#line}" -ne 0 && "${line:0:1}" != 'y' && "${line:0:1}" != 'Y' ]]
+            then
+                echo "file '$real_dst' skipped." >&2
+                continue
+            else
+                rm -rf "$real_dst"
+                if [[ $? -ne 0 ]]
+                then
+                    exit $?
+                fi
+            fi # user enter Y or N
+        fi # $force_overwrite
+    fi # $dst exists
+
     if [[ "$force_fullpath" ]]
     then
         ln -s "$full_src" "$dst"
@@ -140,7 +189,6 @@ do
             exit $?
         fi
     fi
-    shift
 done
 
 # End of 'slink' 
