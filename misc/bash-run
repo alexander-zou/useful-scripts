@@ -145,7 +145,7 @@ then
 fi
 
 args=""
-if [ $(egrep -c '\$[1-9\@\*\#]' "$SOURCE_FILE") -gt 0 ]
+if [ $(egrep -c '\${*[1-9\@\*\#]' "$SOURCE_FILE") -gt 0 ]
 then
 	Print 'PINK' "Please enter arguments for launching your script:"
 	read args
