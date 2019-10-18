@@ -15,16 +15,16 @@ prog="$0"
 Usage() {
     echo 'USAGE:'
     echo -e "\t${prog} [-h]"
-    echo -e "\t${prog} [-a] \033[4mSOURCE\033[0m... \033[4mTARGET\033[0m"
+    echo -e "\t${prog} [-a] [-f] \033[4mSOURCE\033[0m... \033[4mTARGET\033[0m"
     echo
     echo 'DESCRIPT:'
     echo -e "\tCreate symbolic link(s) of each \033[4mSOURCE\033[0m to/into \033[4mTARGET\033[0m."
     echo -e "\tCreated link(s) will contain path relative to the \033[4mTARGET\033[0m directory."
     echo
     echo 'OPTIONS:'
-    echo -e "\t-a\tforce using absolute path."
-    echo -e "\t-f\toverwrite existing files."
-    echo -e "\t-h\tshow this message."
+    echo -e "\t-a\tUse absolute path."
+    echo -e "\t-f\tForce overwrite existing files."
+    echo -e "\t-h\tShow this message."
     echo
     exit 1
 }
