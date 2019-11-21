@@ -158,7 +158,7 @@ then
 fi
 
 args=""
-if [ $(egrep -c 'sys\.argv' "$SOURCE_FILE") -gt 0 ]
+if [ $(egrep -c 'sys\.argv' "$SOURCE_FILE") -gt 0 -o $(egrep -c 'argparse\.ArgumentParser\(' "$SOURCE_FILE") -gt 0 ]
 then
 	Print 'PINK' "Please enter arguments for launching your script:"
 	read args
