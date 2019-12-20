@@ -30,8 +30,12 @@ PrintPattern()
 	if [ "$magic" ]
 	then
 		echo "$magic" >> $file
-		echo >> $file
 	fi
+	if [ "$header_line" ]
+	then
+		echo "$header_line" >> $file
+	fi
+	echo >> $file
 	echo -e "$mult_comment_start" >> $file
 	echo -e "${mult_comment_line_start}Copyright (c) $YEAR $COMPANY. All Rights Reserved" >> $file
 	echo -e "${mult_comment_line_start}" >> $file
@@ -95,6 +99,7 @@ SetMode()
 			mult_comment_end="**/"
 			single_comment_start="/* "
 			single_comment_end="*/"
+			header_line=""
 			interpreter="";;
 		php )
 			mult_comment_start="<?php\n/* "
@@ -103,6 +108,7 @@ SetMode()
 			mult_comment_end=" */\n?>"
 			single_comment_start="<?php // "
 			single_comment_end="?>"
+			header_line=""
 			interpreter="php";;
 		perl )
 			mult_comment_start="=pod"
@@ -111,6 +117,7 @@ SetMode()
 			mult_comment_end="=cut"
 			single_comment_start="#"
 			single_comment_end=""
+			header_line=""
 			interpreter="perl";;
 		python )
 			mult_comment_start="'''"
@@ -119,6 +126,7 @@ SetMode()
 			mult_comment_end="'''"
 			single_comment_start="#"
 			single_comment_end=""
+			header_line='# -*- coding: UTF-8 -*-'
 			interpreter="python";;
 		ruby )
 			mult_comment_start="=begin"
@@ -127,6 +135,7 @@ SetMode()
 			mult_comment_end="=end"
 			single_comment_start="#"
 			single_comment_end=""
+			header_line=""
 			interpreter="ruby";;
 		bash )
 			mult_comment_start="###"
@@ -143,6 +152,7 @@ SetMode()
 			mult_comment_end=""
 			single_comment_start="#"
 			single_comment_end=""
+			header_line=""
 			interpreter="";;
 	esac
 	if [ ! "$interpreter" ]
