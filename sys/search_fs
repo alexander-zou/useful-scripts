@@ -14,36 +14,85 @@ sub Warning {
 	print STDERR "$0: @_\n";
 }
 
-$help = 0;
-$bin = 0;
-$count = 0;
-$print_count = 0;
-$pattern = "";
-@dirs = ();
+$show_help = 0;
+$search_bin = 0;
+$count_file = 0;
+$count_line = 0;
+$ignore_case = 0;
+$only_once = 0;
+$show_lineno = 0;
+$use_color = 0;
+if ( -t STDOUT) {
+	$use_color = 1;
+}
 
-$grep_args = "";
-$grep_args_bin = "";
-$name_prefix = "";
-$name_suffix = "";
+$pattern = "";
+
+$file_counter = 0;
+$line_counter = 0;
+@dirs = ();
 
 sub FindText {
 	my $file = @_[0];
-	my $fullname = @_[1];
-	my $result = `grep $grep_args '$pattern' '$file' | head -n 1`;
-	if ( 0 < length $result) {
-		print $name_prefix.$fullname.$name_suffix.":".$result;
-		$count ++;
+	my $fullpath = @_[1];
+	my $ret = open my $f, '<'.$file;
+	if ( ! $ret) {
+		Warning "Failed to open file '".$fullpath."':".$!;
+		return;
 	}
+
+	$lineno = 1;
+	$matched = 0;
+	while ( my $line = <$f>) {
+		chomp( $line);
+		if ( ( $ignore_case > 0 && $line =~ /$pattern/i) || $line =~ /$pattern/) {
+			print $COLOR_NAME.$fullpath.$CLR_COLOR.$COLON;
+			if ( $show_lineno) {
+				print $COLOR_LINENO.$lineno.$CLR_COLOR.$COLON;
+			}
+			print $`.$COLOR_MATCH.$&.$CLR_COLOR.$'."\n";
+			$line_counter ++;
+			$matched = 1;
+			if ( $only_once > 0) {
+				last;
+			}
+		}
+		$lineno ++;
+	}
+	if ( $matched > 0) {
+		$file_counter ++;
+	}
+
+	close $f;
 }
 
 sub FindBin {
 	my $file = @_[0];
 	my $fullname = @_[1];
-	my $result = `strings '$file' | grep $grep_args_bin '$pattern' | head -n 1`;
-	if ( 0 < length $result) {
-		print $name_prefix.$fullname.$name_suffix.":".$result;
-		$count ++;
+	my $ret = open my $f, 'strings "'.$file.'" |';
+	if ( ! $ret) {
+		Warning "Failed to open file '".$fullname."':".$!;
+		return;
 	}
+
+	$matched = 0;
+	while ( my $line = <$f>) {
+		chomp( $line);
+		if ( ( $ignore_case > 0 && $line =~ /$pattern/i) || $line =~ /$pattern/) {
+			print $COLOR_NAME.$fullname.$CLR_COLOR.$COLON;
+			print $`.$COLOR_MATCH.$&.$CLR_COLOR.$'."\n";
+			$line_counter ++;
+			$matched = 1;
+			if ( $only_once > 0) {
+				last;
+			}
+		}
+	}
+	if ( $matched > 0) {
+		$file_counter ++;
+	}
+
+	close $f;
 }
 
 sub Search {
@@ -53,31 +102,38 @@ sub Search {
 	if ( index( $type, "directory") >= 0) {
 	} elsif ( index( $type, "text") >= 0) {
 		FindText $file, $fullname;
-	} elsif ( $bin) {
+	} elsif ( $search_bin) {
 		FindBin $file, $fullname;
 	}
 }
 
+$arg_ended = 0;
+
 for ( @ARGV) {
-	if ( $_ eq "-h" or $_ eq "-help" or $_ eq "--help") {
-		$help = 1;
-	} elsif ( $_ eq "-r") {
-		if ( substr( `uname`, 0, 6) eq "Darwin") {
-			$grep_args .= " -E";
-			$grep_args_bin .= " -E";
+	if ( $arg_ended > 0) {
+		if ( $pattern eq "") {
+			$pattern = $_;
 		} else {
-			$grep_args .= " -P";
-			$grep_args_bin .= " -P";
+			push( @dirs, $_);
 		}
+	} elsif ( $_ eq "-h" or $_ eq "-help" or $_ eq "--help") {
+		$show_help = 1;
+	} elsif ( $_ eq "-i") {
+		$ignore_case = 1;
 	} elsif ( $_ eq "-n") {
-		$grep_args .= " -n";
+		$show_lineno = 1;
 	} elsif ( $_ eq "-b") {
-		$bin = 1;
-	} elsif ( $_ eq "-m") {
-		$name_prefix = "\033[33;1m";
-		$name_suffix = "\033[0m";
+		$search_bin = 1;
+	} elsif ( $_ eq "-1") {
+		$only_once = 1;
 	} elsif ( $_ eq "-c") {
-		$print_count = 1;
+		$use_color = 0;
+	} elsif ( $_ eq "-f") {
+		$count_file = 1;
+	} elsif ( $_ eq "-l") {
+		$count_line = 1;
+	} elsif ( $_ eq "--") {
+		$arg_ended = 1;
 	} elsif ( $pattern eq "") {
 		$pattern = $_;
 	} else {
@@ -85,20 +141,40 @@ for ( @ARGV) {
 	}
 }
 
-if ( $help) {
+if ( $use_color == 0) {
+	$COLOR_NAME = "";
+	$COLOR_LINENO = "";
+	$COLOR_MATCH = "";
+	$COLOR_COUNT = "";
+	$COLOR_SYNTAX = "";
+	$CLR_COLOR = "";
+	$COLON = ":";
+} else {
+	$COLOR_NAME = "\033[36;1m";
+	$COLOR_LINENO = "\033[36;5m";
+	$COLOR_MATCH = "\033[31;1m";
+	$COLOR_COUNT = "\033[33;5m";
+	$COLOR_SYNTAX = "\033[4m";
+	$CLR_COLOR = "\033[0m";
+	$COLON = "\033[37;2m:\033[0m";
+}
+
+if ( $show_help) {
 	print "
 USAGE:
-	$0 [-b] [-c] [-n] [-r] [-h] \033[4mPATTERN\033[0m \033[4mDIRECTORY\033[0m...
+	$0 [-b] [-c] [-n] [-r] [-h] [--] ${COLOR_SYNTAX}PATTERN${CLR_COLOR} ${COLOR_SYNTAX}DIRECTORY${CLR_COLOR}...
 
 DESCRIPT:
-	Search for files that contain \033[4mPATTERN\033[0m in every \033[4mDIRECTORY\033[0m.
+	Search for files that contains ${COLOR_SYNTAX}PATTERN${CLR_COLOR} in every ${COLOR_SYNTAX}DIRECTORY${CLR_COLOR}.
 
 OPTIONS:
-	-b	Check strings from binary files ( By default will search text files only )
-	-c	Count matched files
-	-n	Show matched line number of text files
-	-m	Mark out file names by terminal color
-	-r	Use perl regex to search
+	-i	Ignore cases
+	-b	Check strings from binary files ( By default search text files only )
+	-n	Show line number of text files
+	-1	Match at most once for each file  
+	-f	Count matched files
+	-l	Count matched lines
+	-c	Force to disable colors
 	
 	-h	Show this message
 
@@ -107,16 +183,23 @@ OPTIONS:
 }
 
 if ( $pattern eq "") {
-	Error "missing PATTERN for search";
+	Error "missing PATTERN for searching !";
 } elsif ( @dirs <= 0) {
-	Error "missing DIRECTORY to search";
+	Error "missing DIRECTORY to search !";
 }
 
 for ( @dirs) {
 	find( \&Search, $_);
 }
 
-if ( $print_count) {
-	print "\n $count files found.\n";
+if ( $count_line > 0 && $count_file > 0) {
+	print $COLOR_COUNT."$line_counter".$CLR_COLOR." line(s) matched in ".$COLOR_COUNT."$file_counter".$CLR_COLOR." file(s).\n";
+} elsif ( $count_file > 0) {
+	print $COLOR_COUNT."$file_counter".$CLR_COLOR." file(s) matched.\n";
+} elsif ( $count_line > 0) {
+	print $COLOR_COUNT."$line_counter".$CLR_COLOR." line(s) matched in total.\n";
 }
 
+if ( $line_counter <= 0) {
+	exit 1;
+}
