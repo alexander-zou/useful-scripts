@@ -134,6 +134,8 @@ for ( @ARGV) {
 		$count_line = 1;
 	} elsif ( $_ eq "--") {
 		$arg_ended = 1;
+	} elsif ( substr( $_, 0, 1) eq '-') {
+		Error "No such options: '$_'";
 	} elsif ( $pattern eq "") {
 		$pattern = $_;
 	} else {
@@ -162,14 +164,14 @@ if ( $use_color == 0) {
 if ( $show_help) {
 	print "
 USAGE:
-	$0 [-b] [-c] [-n] [-r] [-h] [--] ${COLOR_SYNTAX}PATTERN${CLR_COLOR} ${COLOR_SYNTAX}DIRECTORY${CLR_COLOR}...
+	$0 [${COLOR_SYNTAX}OPTION${CLR_COLOR}]... [--] ${COLOR_SYNTAX}PATTERN${CLR_COLOR} ${COLOR_SYNTAX}DIRECTORY${CLR_COLOR}...
 
 DESCRIPT:
 	Search for files that contains ${COLOR_SYNTAX}PATTERN${CLR_COLOR} in every ${COLOR_SYNTAX}DIRECTORY${CLR_COLOR}.
 
 OPTIONS:
 	-i	Ignore cases
-	-b	Check strings from binary files ( By default search text files only )
+	-b	Search in binary files ( By default only text files searched )
 	-n	Show line number of text files
 	-1	Match at most once for each file  
 	-f	Count matched files
@@ -177,6 +179,13 @@ OPTIONS:
 	-c	Force to disable colors
 	
 	-h	Show this message
+
+EXAMPLES:
+	# Count text files that contain hex number:
+	search_fs -i -f '0x[\da-f]+' ~/src
+
+	# Search for 'main' in binary & text files inside folder '-1' & '-2':
+	search_fs -b -- main -1 -2
 
 ";
 	exit -1;
