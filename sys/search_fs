@@ -69,7 +69,7 @@ sub FindText {
 sub FindBin {
 	my $file = @_[0];
 	my $fullname = @_[1];
-	my $ret = open my $f, 'strings "'.$file.'" |';
+	my $ret = open my $f, 'strings -- "'.$file.'" |';
 	if ( ! $ret) {
 		Warning "Failed to open file '".$fullname."':".$!;
 		return;
@@ -98,7 +98,7 @@ sub FindBin {
 sub Search {
 	my $file = $_;
 	my $fullname = $File::Find::name;
-	my $type = `file '$file'`;
+	my $type = `file -- '$file'`;
 	if ( index( $type, "directory") >= 0) {
 	} elsif ( index( $type, "text") >= 0) {
 		FindText $file, $fullname;
