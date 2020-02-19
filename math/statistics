@@ -1,0 +1,147 @@
+#!/usr/bin/env perl
+
+=pod
+
+@File   : statistics   
+@Author : alexander.here@gmail.com
+@Date   : 2020-02-19 11:40   
+@Brief  :  
+
+=cut
+
+$show_help = 0;
+$show_all = 1;
+$show_median = 0;
+$show_min = 0;
+$show_max = 0;
+$show_amount = 0;
+$show_avg = 0;
+$show_header = 1;
+
+for ( @ARGV) {
+	if ( $_ eq "-h" or $_ eq "--help") {
+		$show_help = 1;
+	} elsif ( $_ eq "-l" or $_ eq "--least" or $_ eq "--min") {
+		$show_all = 0;
+        $show_min = 1;
+	} elsif ( $_ eq "-g" or $_ eq "--greatest" or $_ eq "--max") {
+		$show_all = 0;
+        $show_max = 1;
+	} elsif ( $_ eq "-a" or $_ eq "--avg" or $_ eq "--average") {
+		$show_all = 0;
+        $show_avg = 1;
+    } elsif ( $_ eq "-c" or $_ eq "--count") {
+		$show_all = 0;
+        $show_amount = 1;
+    } elsif ( $_ eq "-m" or $_ eq "--median") {
+		$show_all = 0;
+        $show_median = 1;
+    } elsif ( $_ eq "-n" or $_ eq "--no-header") {
+		$show_header = 0;
+	} else {
+		print STDERR "$0: Invalid option '$_'.\n";
+        exit 2;
+	}
+}
+
+if ( $show_help) {
+    	print "
+USAGE:
+	$0 [OPTION]...
+
+DESCRIPT:
+	Read in each line from stdin as a number, and show their statistics.
+
+OPTIONS:
+
+	-n, --no-header
+		Show figures or statistics WITHOUT headers
+
+	-c, --count
+		Show AMOUNT of numbers recognised
+
+	-l, --least, --min
+		Show the MINIMUM number
+
+	-g, --greatest, --max
+		Show the MAXIMUM number
+
+	-a, --avg, --average
+		Show mean value
+
+	-m, --median
+		Show median value
+
+	-h, --help
+		Show this message
+
+NOTICE:
+	Number starts with '+' will NOT be recognised, as per 'sort -n'.
+
+";
+    exit -1;
+}
+
+my $ret = open my $f, 'sort -n |';
+if ( ! $ret) {
+    print STDERR "$0: Failed calling 'sort' program.\n";
+    exit 1;
+}
+
+$sum = 0;
+@datas = ();
+while ( my $line = <$f>) {
+    chomp( $line);
+    if ( $line =~ /^\s*-{0,1}(\d+\.\d*|\d*\.\d+|\d+)\s*$/) {
+        $value = $&;
+        if ( length( $value) > 0) {
+            $sum += $value;
+            push( @datas, $value);
+        }
+    } elsif ( not $line =~ /^\s*$/) {
+        print STDERR "$0: This line '$line' ain't a number. Ignored.\n";
+    }
+}
+
+sub Show {
+    my $header = @_[0];
+    my $figure = @_[1];
+    if ( $show_header) {
+        print "$header\t: $figure\n";
+    } else {
+        print "$figure\n";
+    }
+}
+
+$amount = @datas;
+if ( $show_all || $show_amount) {
+    Show "COUNT", $amount;
+}
+
+if ( $amount <= 0) {
+    exit 0;
+}
+
+if ( $show_all || $show_min) {
+    Show "MIN", "$datas[0]"
+}
+if ( $show_all || $show_max) {
+    Show "MAX", "$datas[-1]"
+}
+if ( $show_all || $show_avg) {
+    $avg = $sum / @datas;
+    Show "AVG", "$avg"
+}
+if ( $show_all || $show_median) {
+    if ( $amount % 2) {
+        $idx = ( $amount - 1) / 2;
+        $median = $datas[$idx];
+    } else {
+        $idx = $amount / 2;
+        $median = ( $datas[$idx-1] + $datas[$idx]) / 2;
+    }
+    Show "MEDIAN", $median
+}
+
+# End of 'statistics' 
+
