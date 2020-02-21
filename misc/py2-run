@@ -11,7 +11,7 @@ shift
 OPTIONS="$*"
 MY_TTY=`tty`
 MY_TTY=`basename "$MY_TTY"`
-TEMP_DIR="$HOME/.py2-run"
+TEMP_DIR="$HOME/.cache/.py2-run"
 WORK_DIR="$TEMP_DIR/$MY_TTY"
 SOURCE_FILE="$WORK_DIR/source.py"
 

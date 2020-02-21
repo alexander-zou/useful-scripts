@@ -12,7 +12,7 @@ shift
 OPTIONS="$*"
 MY_TTY=`tty`
 MY_TTY=`basename "$MY_TTY"`
-TEMP_DIR="$HOME/.c-run"
+TEMP_DIR="$HOME/.cache/.c-run"
 WORK_DIR="$TEMP_DIR/$MY_TTY"
 SOURCE_FILE="$WORK_DIR/source.c"
 TARGET_FILE="$WORK_DIR/a.out"
