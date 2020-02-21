@@ -63,7 +63,6 @@ function push_cd() {
   fi
 }
 
-# replace standard `cd` with enhanced version, ensure tab-completion works
 alias cd=push_cd
-complete -d cd
+
 
