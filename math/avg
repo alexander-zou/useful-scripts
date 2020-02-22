@@ -2,7 +2,7 @@
 
 ###
 # 
-# @File   : min   
+# @File   : avg   
 # @Author : zoujiachen@megvii.com   
 # @Date   : 2018-11-08 16:28
 # @Usage  : cat data.txt | avg
@@ -67,5 +67,5 @@ else # read from stdin
 fi
 
 
-# End of 'min' 
+# End of 'avg' 
 
