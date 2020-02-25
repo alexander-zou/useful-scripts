@@ -16,6 +16,21 @@ _adbw_completion_escape() {
     fi
 }
 
+_adbw_completion_filter_extension() {
+    local IFS=$'\n'
+    while read name
+    do
+        shopt -s nocasematch
+        if [[ -d "$name" ]]
+        then
+            echo "$name"
+        elif [[ "$name" = *".$1" ]]
+        then
+            echo "$name"
+        fi
+    done
+}
+
 _adbw_completion_filedir() {
     local cur="$1"
     local quote="$2"
@@ -109,7 +124,7 @@ _adbw_completion() {
         if [[ "$COMP_CWORD" -gt 1 ]]
         then
             local IFS=$'\n'
-            COMPREPLY=( $(compgen -f -- "$cur" | _adbw_completion_escape "$quote") )
+            COMPREPLY=( $(compgen -f -- "$cur" | _adbw_completion_filter_extension 'apk' | _adbw_completion_escape "$quote") )
         fi
     fi
 }
