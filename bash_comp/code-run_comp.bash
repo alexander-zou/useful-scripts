@@ -48,7 +48,7 @@ _other_run_completion() {
     fi
 }
 
-complete -F _other_run_completion perl-run py2-run py3-run
+complete -F _other_run_completion perl-run py2-run py3-run bash-run
 
 # End of 'code-run_comp.bash' 
 
