@@ -55,7 +55,7 @@ _adbw_completion() {
     if [[ "$COMP_CWORD" -eq 1 ]]
     then
         type compopt &> /dev/null && compopt +o nospace 2> /dev/null
-        COMPREPLY=($(compgen -W "devices help version connect disconnect forward ppp reverse push pull sync shell emu install uninstall backup restore bugreport jdwp logcat disable-verity enable-verity keygen remount reboot sideload root unroot usb tcpip start-server kill-server reconnect" -- "${COMP_WORDS[1]}"))
+        COMPREPLY=($(compgen -W "ip devices help version connect disconnect forward ppp reverse push pull sync shell emu install uninstall backup restore bugreport jdwp logcat disable-verity enable-verity keygen remount reboot sideload root unroot usb tcpip start-server kill-server reconnect" -- "${COMP_WORDS[1]}"))
     elif [[ "$COMP_CWORD" -ge 2 && "${COMP_WORDS[1]}" = "pull" ]]
     then
         local IFS=$'\n'

@@ -129,7 +129,8 @@ AskSerialNo() {
     then
         return
     fi
-    read -a sn_arr <<< $(adb devices | egrep -o '^[0-9a-zA-Z]{6,20}\s+device$' | egrep -o '^[0-9a-zA-Z]{6,20}')
+    local IFS=$'\n'
+    sn_arr=( $(adb devices | egrep -o '^[0-9a-zA-Z]{6,20}\s+device$' | egrep -o '^[0-9a-zA-Z]{6,20}') )
     for idx in "${!sn_arr[@]}"
     do
         manufacturer=$(adb -s "${sn_arr[$idx]}" shell getprop ro.product.manufacturer | tr -d '\n\r')
@@ -213,7 +214,8 @@ DoDevices() {
         DoAdb devices $@
         exit $?
     fi
-    read -a sn_arr <<< $(adb devices | egrep -o '^[0-9a-zA-Z]{6,20}\s+device$' | egrep -o '^[0-9a-zA-Z]{6,20}')
+    local IFS=$'\n'
+    sn_arr=( $(adb devices | egrep -o '^[0-9a-zA-Z]{6,20}\s+device$' | egrep -o '^[0-9a-zA-Z]{6,20}') )
     for idx in "${!sn_arr[@]}"
     do
         manufacturer=$(adb -s "${sn_arr[$idx]}" shell getprop ro.product.manufacturer | tr -d '\n\r')
