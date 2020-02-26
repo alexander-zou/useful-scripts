@@ -4,7 +4,7 @@ MY_NAME="$0"
 AUTHOR="${ALEC_SCRIPT_CONF_EMAIL:-`whoami`}"
 COMPANY="$ALEC_SCRIPT_CONF_COMPANY"
 YEAR=`date '+%Y'`
-TIME=`date '+%Y-%m-%d %H:%M'`
+TIME=`date '+%Y-%m-%d %H:%M %Z(%z)'`
 
 mode="auto"	#default
 magic=""
