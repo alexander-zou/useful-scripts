@@ -19,7 +19,7 @@ function push_cd() {
   elif [ "$1" == "-" ]; then
     if [ "$(dirs -p | wc -l)" -gt 1 ]; then
       current_dir="$PWD"
-      popd > /dev/null
+      popd > /dev/null 2>&1
 #      pushd -n $current_dir > /dev/null
     elif [ -n "$OLDPWD" ]; then
       push_cd $OLDPWD
@@ -29,19 +29,14 @@ function push_cd() {
   elif [ "$1" == "-l" ] || [ "$1" == "-s" ]; then
     dirs -v
 
-  # use `push_cd -l N` to go to the Nth directory in history (pushing)
-  elif [ "$1" == "-g" ] && [[ "$2" =~ ^[0-9]+$ ]]; then
-    indexed_path=$(dirs -p | sed -n $(($2+1))p)
-    push_cd $indexed_path
-
   # use `push_cd +N` to go to the Nth directory in history (pushing)
   elif [[ "$1" =~ ^+[0-9]+$ ]]; then
     push_cd -g ${1/+/}
 
   # use `push_cd -N` to go n directories back in history
-  elif [[ "$1" =~ ^-[0-9]+$ ]]; then
+  elif [[ "$1" =~ ^-[0-9]+$ && "${1/-/}" -ge 1 ]]; then
     for i in `seq 1 ${1/-/}`; do
-      popd > /dev/null
+      popd > /dev/null 2>&1
     done
 
   # use `push_cd -- <path>` if your path begins with a dash
@@ -54,7 +49,7 @@ function push_cd() {
     pushd "$@" > /dev/null
 
     if [ "$1" == "." ] || [ "$1" == "$PWD" ]; then
-      popd -n > /dev/null
+      popd -n > /dev/null 2>&1
     fi
   fi
 
