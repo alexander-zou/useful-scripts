@@ -30,6 +30,7 @@ Help() {
 	echo -e "\\t\\tnew\\t- start empty source from scratch"
 	echo -e "\\t\\tlast\\t- continue with source file saved last time"
 	echo -e "\\t\\tagain\\t- compile & run last program again directly"
+	echo -e "\\t\\tshow\\t- print existing source code"
 	echo -e "\\t\\tpath\\t- show path of source file"
 	echo -e "\\t\\thelp\\t- show this information"
 	echo -e
@@ -134,21 +135,29 @@ case "$CMD" in
 	new  )	NewFile;;
 	last )	if [ ! -f "$SOURCE_FILE" ]
 			then
-				Print 'LBLUE' "no old source file found."
+				Print 'LBLUE' "no existing source file found."
 				NewFile
 			fi;;
 	again)	if [ ! -f "$SOURCE_FILE" ]
 			then
-				Print 'LBLUE' "no old source file found."
+				Print 'LBLUE' "no existing source file found."
 				NewFile
 			fi
 			NO_EDIT="yes";;
 	path )  if [ ! -f "$SOURCE_FILE" ]
 			then
-				Print 'RED' "no old source file found."
+				Print 'RED' "no existing source file found."
 				exit 1
 			else
 				Print 'LBLUE' "$SOURCE_FILE"
+				exit 0
+			fi;;
+	show )  if [ ! -f "$SOURCE_FILE" ]
+			then
+				Print 'RED' "no existing source file found."
+				exit 1
+			else
+				cat "$SOURCE_FILE"
 				exit 0
 			fi;;
 	* )		Print 'RED' "ERROR: you need to provide a command, see '$MY_NAME help' for help." >&2

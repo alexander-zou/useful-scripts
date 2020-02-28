@@ -13,7 +13,7 @@
 _c_run_completion() {
     if [[ "$COMP_CWORD" -eq 1 ]]
     then
-        COMPREPLY=($(compgen -W "new last again path help" -- "${COMP_WORDS[1]}"))
+        COMPREPLY=($(compgen -W "new last again show path help" -- "${COMP_WORDS[1]}"))
     else
         COMPREPLY=($(compgen -W "-Wall -g -O0 -O1 -O2 -O3 -std -I -D -U -l -Wa, -Wl, -Wp, -Werror,-W -pedantic -pedantic-errors" -- "${COMP_WORDS[$COMP_CWORD]}"))
         if [[ "${#COMPREPLY[@]}" -eq 1 ]]
@@ -31,7 +31,7 @@ complete -F _c_run_completion c-run cpp-run
 _java_run_completion() {
     if [[ "$COMP_CWORD" -eq 1 ]]
     then
-        COMPREPLY=($(compgen -W "new last again path help" -- "${COMP_WORDS[1]}"))
+        COMPREPLY=($(compgen -W "new last again show path help" -- "${COMP_WORDS[1]}"))
     else
         COMPREPLY=($(compgen -W "-g -verbose -deprecation -cp -classpath -source -target -Werror" -- "${COMP_WORDS[$COMP_CWORD]}"))
     fi
@@ -42,7 +42,7 @@ complete -F _java_run_completion java-run
 _other_run_completion() {
     if [[ "$COMP_CWORD" -eq 1 ]]
     then
-        COMPREPLY=($(compgen -W "new last again path help" -- "${COMP_WORDS[1]}"))
+        COMPREPLY=($(compgen -W "new last again show path help" -- "${COMP_WORDS[1]}"))
     else
         COMPREPLY=()
     fi
