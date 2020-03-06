@@ -14,6 +14,7 @@ MY_PATH="$(dirname "$BASH_SOURCE")"
 [[ -f "${MY_PATH}/code-run_comp.bash" ]] && . "${MY_PATH}/code-run_comp.bash"
 [[ -f "${MY_PATH}/create_comp.bash" ]] && . "${MY_PATH}/create_comp.bash"
 [[ -f "${MY_PATH}/statistics_comp.bash" ]] && . "${MY_PATH}/statistics_comp.bash"
+[[ -f "${MY_PATH}/imageconv_py_comp.bash" ]] && . "${MY_PATH}/imageconv_py_comp.bash"
 
 # End of 'all.bash' 
 
