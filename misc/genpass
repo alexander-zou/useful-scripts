@@ -239,7 +239,27 @@ fi # if -f
 
 if [[ "$custom_alphabet" ]]
 then
+    i=0
+    while [[ "$i" -lt "${#custom_alphabet}" ]]
+    do
+        cur="${custom_alphabet:i:1}"
+        if [[ "${custom_alphabet:0:i}" = *"$cur"* ]] # if cur appeared before
+        then # remove cur from custom_alphabet
+            custom_alphabet="${custom_alphabet:0:i}${custom_alphabet:i+1}"
+        else
+            i=$((i+1))
+        fi
+    done
+    # echo "DEBUG: stripped custom alphabet: '$custom_alphabet'" >&2
     ab_list=("$custom_alphabet")
+    if [[ -z "$length" && "$donot_repeat" ]]
+    then
+        length="${#custom_alphabet}"
+        if [[ "$length" -gt 16 ]]
+        then
+            length=16
+        fi
+    fi
 else
     if [[ "$use_default_alphabet" ]]
     then
