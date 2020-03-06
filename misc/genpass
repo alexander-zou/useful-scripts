@@ -63,7 +63,7 @@ do
         echo -e "\t$PROGRAM  [-r] [-1|-c] [-n LENGTH] -f FORMER_PASSWORD"
         echo -e "\t$PROGRAM  [-r] [-1|-c] [-n LENGTH] -a ALPHABET"
         echo -e "\nOptions:"
-        echo -e "\n\t-h\n\t\tShow this message."
+        echo -e "\t-h\n\t\tShow this message."
         echo -e "\n\t-r\n\t\tUtilize system random device instead of pesudo-random numbers."
         echo -e "\n\t-1\n\t\tDo NOT use any charactor more than once."
         echo -e "\n\t-c\n\t\tAllow using charactor continuously."
@@ -74,6 +74,7 @@ do
         echo -e "\n\t-f FORMER_PASSWORD\n\t\tRefer to FORMER_PASSWORD for generating new password."
         echo -e "\n\t-a ALPHABET\n\t\tSpecify alphabet used for generating new password."
         echo -e "\n\t-n LENGTH\n\t\tLength of password to generate. Default is 16."
+        echo
         exit 1
     elif [[ "$1" = '-r' ]]
     then
