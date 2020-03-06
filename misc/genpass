@@ -1,0 +1,334 @@
+#!/usr/bin/env bash
+
+###
+# 
+# @File   : genpass   
+# @Author : alexander.here@gmail.com
+# @Date   : 2020-03-04 12:52 CST(+0800)   
+# @Brief  : generate password with specified rules, see 'genpass -h'.
+# 
+###
+
+PROGRAM="$0"
+MAX_LENGTH=4096
+length=
+use_random_device=
+
+use_default_alphabet=1
+use_digits=
+use_uppercase_letters=
+use_lowercase_letters=
+use_special_symbols=
+donot_repeat=
+allow_continuous=
+
+custom_alphabet=
+former_password=
+
+additional_charactors=
+
+rand() {
+    range="$1"
+    if [[ "$use_random_device" ]]
+    then
+        tmp=$(od -An -D -N2 /dev/urandom)
+        echo "$((tmp%range))"
+        #echo "DEBUG: rand($range) => $((tmp%range))" >&2
+    else
+        echo "$((RANDOM%range))"
+    fi
+}
+
+# parse & check arguments:
+
+syntax_type=
+
+check_syntax() {
+    local arg="$1"
+    local type="$2"
+    if [[ "$syntax_type" && "$syntax_type" != "$type" ]]
+    then
+        echo "ERROR: conflicts occurred with option '$arg' !" >&2
+        exit 255
+    fi
+    syntax_type="$type"
+}
+
+while [ "$#" -ge 1 ]
+do
+    if [[ "$1" = '-h' ]]
+    then
+        echo "Usage:"
+        echo -e "\t$PROGRAM  [-r] [-1|-c] [-n LENGTH] [-d] [-l] [-u] [-s]"
+        echo -e "\t$PROGRAM  [-r] [-1|-c] [-n LENGTH] -f FORMER_PASSWORD"
+        echo -e "\t$PROGRAM  [-r] [-1|-c] [-n LENGTH] -a ALPHABET"
+        echo -e "\nOptions:"
+        echo -e "\n\t-h\n\t\tShow this message."
+        echo -e "\n\t-r\n\t\tUtilize system random device instead of pesudo-random numbers."
+        echo -e "\n\t-1\n\t\tDo NOT use any charactor more than once."
+        echo -e "\n\t-c\n\t\tAllow using charactor continuously."
+        echo -e "\n\t-d\n\t\tUsing digits."
+        echo -e "\n\t-l\n\t\tUsing lowercase letters."
+        echo -e "\n\t-u\n\t\tUsing uppercase letters."
+        echo -e "\n\t-s\n\t\tUsing special symbols."
+        echo -e "\n\t-f FORMER_PASSWORD\n\t\tRefer to FORMER_PASSWORD for generating new password."
+        echo -e "\n\t-a ALPHABET\n\t\tSpecify alphabet used for generating new password."
+        echo -e "\n\t-n LENGTH\n\t\tLength of password to generate. Default is 16."
+        exit 1
+    elif [[ "$1" = '-r' ]]
+    then
+        use_random_device=1
+        shift
+    elif [[ "$1" = '-1' ]]
+    then
+        if [[ "$allow_continuous" ]]
+        then
+            echo "ERROR: conflict options '-1' and '-c' !" >&2
+            exit 255
+        fi
+        donot_repeat=1
+        shift
+    elif [[ "$1" = '-c' ]]
+    then
+        if [[ "$donot_repeat" ]]
+        then
+            echo "ERROR: conflict options '-1' and '-c' !" >&2
+            exit 255
+        fi
+        allow_continuous=1
+        shift
+    elif [[ "$1" = '-d' ]]
+    then
+        check_syntax "$1" 0
+        use_digits=1
+        use_default_alphabet=
+        shift
+    elif [[ "$1" = '-l' ]]
+    then
+        check_syntax "$1" 0
+        use_lowercase_letters=1
+        use_default_alphabet=
+        shift
+    elif [[ "$1" = '-u' ]]
+    then
+        check_syntax "$1" 0
+        use_uppercase_letters=1
+        use_default_alphabet=
+        shift
+    elif [[ "$1" = '-s' ]]
+    then
+        check_syntax "$1" 0
+        use_special_symbols=1
+        use_default_alphabet=
+        shift
+    elif [[ "$1" = '-n' ]]
+    then
+        if [[ "$length" ]]
+        then
+            echo "ERROR: cannot set option '-n' more than once !" >&2
+            exit 255
+        elif [[ "$#" -le 1 ]]
+        then
+            echo "ERROR: missing parameter for option '-n' !" >&2
+            exit 255
+        elif [[ "$2" =~ ^[0-9]+$ ]]
+        then
+            if [[ "$2" -gt "$MAX_LENGTH" ]]
+            then
+                echo "ERROR: length setting is out of range!" >&2
+                exit 255
+            fi
+            length="$2"
+            shift 2
+        else
+            echo "ERROR: expect number instead of '$2' for option '-n' !" >&2
+            exit 255
+        fi
+    elif [[ "$1" = '-f' ]]
+    then
+        check_syntax "$1" 1
+        use_default_alphabet=
+        if [[ "$former_password" ]]
+        then
+            echo "ERROR: cannot set option '-f' more than once !" >&2
+            exit 255
+        elif [[ "$#" -le 1 ]]
+        then
+            echo "ERROR: missing parameter for option '-f' !" >&2
+            exit 255
+        else
+            former_password="$2"
+            shift 2
+        fi
+    elif [[ "$1" = '-a' ]]
+    then
+        check_syntax "$1" 2
+        use_default_alphabet=
+        if [[ "$custom_alphabet" ]]
+        then
+            echo "ERROR: cannot set option '-a' more than once !" >&2
+            exit 255
+        elif [[ "$#" -le 1 ]]
+        then
+            echo "ERROR: missing parameter for option '-a' !" >&2
+            exit 255
+        else
+            custom_alphabet="$2"
+            shift 2
+        fi
+    else
+        echo "ERROR: unknown option '$1' !" >&2
+        exit 255
+    fi
+done
+
+# default alphabets:
+
+digits='0123456789'
+upper_letters=ABCDEFGHIJKLMNOPQRSTUVWXYZ
+lower_letters=abcdefghijklmnopqrstuvwxyz
+special_symbols='~!@#$%^&*()_-+=[]{}\|<>,./?:;"`'
+special_symbols="${special_symbols}'"
+
+# preprocessing:
+
+ab_list=()
+
+if [[ "$former_password" ]]
+then
+    last_char=
+    len="${#former_password}"
+    if [[ "$len" -lt 1 ]]
+    then
+        echo "ERROR: FORMER_PASSWORD is too short!" >&2
+        exit 255
+    elif [[ "$len" -gt "$MAX_LENGTH" ]]
+    then
+        echo "ERROR: FORMER_PASSWORD is too long!" >&2
+        exit 255
+    fi
+    if [[ -z "$length" ]]
+    then
+        length="$len"
+    fi
+    for ((i=0;i<$len;i++))
+    do
+        char="${former_password:i:1}"
+        if [[ -z "$donot_repeat" && "$char" = "$last_char" ]]
+        then
+            allow_continuous=1
+        fi
+        if [[ "$digits" = *"$char"* ]]
+        then
+            use_digits=1
+        elif [[ "$upper_letters" = *"$char"* ]]
+        then
+            use_uppercase_letters=1
+        elif [[ "$lower_letters" = *"$char"* ]]
+        then
+            use_lowercase_letters=1
+        elif [[ "$special_symbols" = *"$char"* ]]
+        then
+            use_special_symbols=1
+        else
+            additional_charactors="${additional_charactors}${char}"
+        fi
+        last_char="$char"
+    done # for each charactor in FORMER_PASSWORD
+fi # if -f
+
+if [[ "$custom_alphabet" ]]
+then
+    ab_list=("$custom_alphabet")
+else
+    if [[ "$use_default_alphabet" ]]
+    then
+        ab_list=( "$digits" "$upper_letters" "$lower_letters" "$special_symbols")
+    fi
+    if [[ "$use_digits" ]]
+    then
+        ab_list=("${ab_list[@]}" "$digits")
+    fi
+    if [[ "$use_uppercase_letters" ]]
+    then
+        ab_list=("${ab_list[@]}" "$upper_letters")
+    fi
+    if [[ "$use_lowercase_letters" ]]
+    then
+        ab_list=("${ab_list[@]}" "$lower_letters")
+    fi
+    if [[ "$use_special_symbols" ]]
+    then
+        ab_list=("${ab_list[@]}" "$special_symbols")
+    fi
+    if [[ "$additional_charactors" ]]
+    then
+        ab_list=("${ab_list[@]}" "$additional_charactors")
+    fi
+fi # if -a
+
+if [[ -z "$length" ]]
+then
+    length=16
+fi
+
+# generating:
+result=
+last_char=
+while [[ "${#result}" -lt "$length" ]]
+do
+    cur_ab_count="${#ab_list[@]}"
+
+    if [[ "$cur_ab_count" -le 0 ]]
+    then
+        echo "ERROR: insufficient charactors for new password!" >&2
+        exit 254
+    fi
+
+    if [[ "$cur_ab_count" -le 1 ]]
+    then
+        ab_idx=0
+    else
+        ab_idx=$(rand "$cur_ab_count")
+    fi
+    
+    char_idx=$(rand "${#ab_list[ab_idx]}")
+
+    new_char="${ab_list[ab_idx]:char_idx:1}"
+
+    # echo "DEBUG: ab_idx:${ab_idx}   char_idx:${char_idx}  new_char:${new_char}  last_char:${last_char}" >&2
+
+    if [[ -z "$allow_continuous" && "$new_char" = "$last_char" ]]
+    then
+        if [[ "$cur_ab_count" -le 1 && "${#ab_list[0]}" -le 1 ]]
+        then
+            echo "ERROR: insufficient charactors for new password!" >&2
+            exit 253
+        else
+            continue
+        fi
+    fi
+
+    result="${result}${new_char}"
+    last_char="$new_char"
+
+    if [[ "$donot_repeat" ]]
+    then
+        cur_ab="${ab_list[ab_idx]}"
+        ab_list[ab_idx]="${cur_ab:0:char_idx}${cur_ab:char_idx+1}"
+        # echo "DEBUG: cur_ab=${cur_ab}" >&2
+        # echo "DEBUG: nxt_ab=${ab_list[ab_idx]}" >&2
+    fi
+
+    space_left="$((length-${#result}))"
+    # echo "DEBUG: cur_ab_count:${cur_ab_count}  space_left:$space_left" >&2
+    if [[ "${#ab_list[ab_idx]}" -lt 1 || "$space_left" -lt "$cur_ab_count" ]]
+    then # remove current alphabet
+       ab_list=("${ab_list[@]:0:ab_idx}" "${ab_list[@]:ab_idx+1}")
+    fi
+done # for each charactor to generate
+
+echo "$result"
+
+# End of 'genpass' 
+
