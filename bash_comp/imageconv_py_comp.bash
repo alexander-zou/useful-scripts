@@ -9,7 +9,7 @@
 # 
 ###
 
-_imageconf_py_completion() {
+_imageconv_py_completion() {
     local OPT_LIST="-- -h --path -p --width --col -c --height --row -r --stride -s --scanline -l --input-type -i --output-type -o --input-yuv-color --output-yuv-color --input-yuv-range --output-yuv-range --normalize -n --keep-name -k --force -f --verbose -v"
     local cur="${COMP_WORDS[COMP_CWORD]}"
     if [[ "$COMP_CWORD" -gt 1 ]]
@@ -36,7 +36,7 @@ _imageconf_py_completion() {
     COMPREPLY=($(compgen -W "$OPT_LIST" -f -- "$cur"))
 }
 
-complete -F _imageconf_py_completion imageconv.py
+complete -F _imageconv_py_completion imageconv.py
 
 
 # End of 'imageconv_py_comp.bash' 
