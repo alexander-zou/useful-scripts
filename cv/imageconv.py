@@ -157,7 +157,7 @@ def normalize( mat, info, args) :
             return np.clip( mat.astype( np.float32), 0, norm_max) * 255.0 / norm_max
     elif args.input_type in [ "bgr", "rgb", "rgba", "bgra"] :
         if norm_max >= 0:
-            print( "Warning: option -n, --normalize only work with 1-channel input, ignored.")
+            print( "Warning: option -n/--normalize only works with 1-channel input, ignored.")
         b = mat[ :, :, 0]
         g = mat[ :, :, 1]
         r = mat[ :, :, 2]
@@ -472,8 +472,38 @@ def process_image( mat, filename, args) :
     if info[ "channel"] == 1 :
         info[ "y_range"] = "[" + str( mat.min()) + "," + str( mat.max()) + "]"
         prepare_save( info, args)
+        if args.normalize is not None:
+            if args.normalize > 0:
+                norm_max = args.normalize
+            else:
+                norm_max = mat.max()
+            mat = mat.astype( np.float32) * 255 / norm_max
+        elif mat.dtype == np.uint16:
+            mat = mat.astype( np.float) / 256
+        elif mat.dtype == np.float32:
+            mat = mat * 255
         save_mat( mat.astype( np.float), info, args)
+    elif info[ "channel"] == 2:
+        if args.normalize is not None :
+            print( "Warning: option -n/--normalize only works with 1-channel input, ignored.")
+        y = mat[ :, :, 0]
+        a = mat[ :, :, 1]
+        info[ "y_range"] = "[" + str( y.min()) + "," + str( y.max()) + "]"
+        info[ "a_range"] = "[" + str( a.min()) + "," + str( a.max()) + "]"
+        if mat.dtype == np.uint16:
+            mat = mat / 256
+            y = mat[ :, :, 0]
+            a = mat[ :, :, 1]
+        elif mat.dtype == np.float32:
+            mat = mat * 255
+            y = mat[ :, :, 0]
+            a = mat[ :, :, 1]
+        bgra = cv.merge( ( y, y, y, a))
+        prepare_save( info, args)
+        save_mat( bgra.astype( np.uint8), info, args)
     elif info[ "channel"] >= 3:
+        if args.normalize is not None :
+            print( "Warning: option -n/--normalize only works with 1-channel input, ignored.")
         b = mat[ :, :, 0]
         g = mat[ :, :, 1]
         r = mat[ :, :, 2]
@@ -483,8 +513,15 @@ def process_image( mat, filename, args) :
         if info[ "channel"] >= 4 :
             a = mat[ :, :, 3]
             info[ "a_range"] = "[" + str( a.min()) + "," + str( a.max()) + "]"
+        if mat.dtype == np.uint16:
+            mat = ( mat / 256).astype( np.uint8)
+        elif mat.dtype == np.float32:
+            mat = ( mat * 255).astype( np.uint8)
         prepare_save( info, args)
         save_mat( mat, info, args)
+    else:
+        print( "ERROR: internal error process_image()")
+        exit( 1)
 
 def get_size( array, info, args) :
     # get stride and scanline:
