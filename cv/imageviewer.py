@@ -163,6 +163,17 @@ def main( args) :
         else:
             print( "WARNING: cannot locate file '$s', ignored." % ( elem))
 
+    try:
+        import shutil
+        terminal_size = shutil.get_terminal_size( ( 80, 24))
+        screen_height = terminal_size.lines
+        screen_width = terminal_size.columns
+    except:
+        try:
+            screen_height, screen_width = os.popen('stty size', 'r').read().split()
+        except:
+            screen_height, screen_width = 24, 80
+
     # process each file:
     if mode == MODE_INTERACTIVE:
         #TODO
@@ -184,8 +195,12 @@ def main( args) :
             if len( expanded_files) > 1:
                 print( "\n" + path)
             if mode == MODE_AUTO:
-                resize_width = 80
-                resize_height = int( height * resize_width / width + 0.5)
+                if screen_width * height >= screen_height * 2 * width:
+                    resize_height = screen_height * 2
+                    resize_width = int( width * resize_height / height + 0.5)
+                else:
+                    resize_width = screen_width
+                    resize_height = int( height * resize_width / width + 0.5)
             elif mode == MODE_FIXED_WIDTH:
                 resize_width = args.cols
                 resize_height = int( height * resize_width / width + 0.5)
