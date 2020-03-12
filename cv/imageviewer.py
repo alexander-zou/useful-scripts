@@ -23,7 +23,7 @@ ERR_INTERAL = 4
 
 DESC_STR = "Show image(s) within terminal."
 USAGE_STR = "imageviewer.py [-h] [-i] [-f FORMAT] [-c COL] [-r ROW] [-s SCALE]" + \
-            " [--] FILE [FILE ...]"
+            " [--] [FILE ...] [DIR ...]"
 
 MODE_AUTO = 0
 MODE_FIXED_WIDTH = 1
@@ -106,6 +106,8 @@ def main( args) :
                         help = "interactive mode")
     parser.add_argument( "-t", "--transparent", action = "store_true",
                         help = "use checkered pattern to show transparency")
+    parser.add_argument( "-e", "--recursive", action = "store_true",
+                        help = "travel into folders recursively")
     args, arg_files = parser.parse_known_args( args)
     try :
         arg_files.remove( "--")
@@ -153,11 +155,17 @@ def main( args) :
     expanded_files = list()
     for elem in arg_files:
         if os.path.isdir( elem):
-            for base, folders, files in os.walk( elem):
-                folders.sort(); files.sort()
-                for name in files:
-                    if is_picture_suffix( name):
-                        expanded_files.append( os.path.join( base, name))
+            if args.recursive:
+                for base, folders, files in os.walk( elem):
+                    folders.sort(); files.sort()
+                    for name in files:
+                        if is_picture_suffix( name):
+                            expanded_files.append( os.path.join( base, name))
+            else:
+                for name in os.listdir( elem):
+                    path = os.path.join( elem, name)
+                    if os.path.isfile( path) and is_picture_suffix( name):
+                        expanded_files.append( path)
         elif os.path.isfile( elem):
             expanded_files.append( elem)
         else:
@@ -194,6 +202,8 @@ def main( args) :
                 continue
             if len( expanded_files) > 1:
                 print( "\n" + path)
+            else:
+                screen_height -= 1
             if mode == MODE_AUTO:
                 if screen_width * height >= screen_height * 2 * width:
                     resize_height = screen_height * 2

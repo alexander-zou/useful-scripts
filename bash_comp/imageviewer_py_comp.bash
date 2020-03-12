@@ -10,7 +10,7 @@
 ###
 
 _imageviewer_py_completion() {
-    local OPT_LIST="-- -h --help -c --cols --width -r --rows --height -s --scale"
+    local OPT_LIST="-- -h --help -c --cols --width -r --rows --height -s --scale -e --recursive"
     local cur="${COMP_WORDS[COMP_CWORD]}"
     if [[ "$COMP_CWORD" -gt 1 ]]
     then
