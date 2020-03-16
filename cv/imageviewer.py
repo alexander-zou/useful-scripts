@@ -169,7 +169,7 @@ def main( args) :
         elif os.path.isfile( elem):
             expanded_files.append( elem)
         else:
-            print( "WARNING: cannot locate file '$s', ignored." % ( elem))
+            print( "WARNING: cannot locate file '%s', ignored." % ( elem))
 
     try:
         import shutil
