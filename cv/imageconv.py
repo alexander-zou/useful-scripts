@@ -7,7 +7,6 @@
 import sys
 import os
 import glob
-import random
 import argparse
 import cv2 as cv
 import math
@@ -77,12 +76,6 @@ def prompt( msg, default) :
             return prompt( msg, default)
     except :
         return default
-
-#def generate_tmp_filename_with_suffix( suffix) :
-#    while True :
-#        tmp_name = "__tmp_" + str( random.randint( 1000000, 9999999)) + suffix;
-#        if not os.path.exists( tmp_name) :
-#            return tmp_name;
 
 def guess_width( original, pixel_bytes, args) :
     pixel_count = len( original) // pixel_bytes
@@ -360,9 +353,15 @@ def encode_image( path, ext, mat) :
         return
     data.tofile( path)
 
+def is_same_path( path1, path2):
+    try:
+        return os.path.samefile( path1, path2)
+    except:
+        return False
+
 # mat is single-channel-float32(0~255) or BGR or BGRA:
 def save_mat( mat, info, args) :
-    if os.path.exists( info[ "output"]) and not args.force :
+    if os.path.exists( info[ "output"]) and not args.force and not is_same_path( info[ "output"], '/dev/stdout') :
         if not prompt( "File '" + info[ "output"] + "' already exists, overwrite?", True) :
             return
     if args.verbose :
