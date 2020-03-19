@@ -44,7 +44,8 @@ def is_picture_suffix( str):
     return False
 
 def load_bgra( path):
-    data = np.fromfile( path, dtype = np.uint8)
+    with open( path, 'rb') as inf:
+        data = np.frombuffer( inf.read(), dtype = np.uint8)
     mat = cv.imdecode( data, cv.IMREAD_UNCHANGED)
     height = int( mat.shape[ 0])
     width = int( mat.shape[ 1])
@@ -166,7 +167,7 @@ def main( args) :
                     path = os.path.join( elem, name)
                     if os.path.isfile( path) and is_picture_suffix( name):
                         expanded_files.append( path)
-        elif os.path.isfile( elem):
+        elif os.path.isfile( elem) or os.path.islink( elem):
             expanded_files.append( elem)
         else:
             print( "WARNING: cannot locate file '%s', ignored." % ( elem))
