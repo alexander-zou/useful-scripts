@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 '''
@@ -10,6 +10,7 @@
 
 '''
 
+from __future__ import print_function
 import os
 import sys
 import argparse
@@ -179,9 +180,11 @@ def main( args) :
         screen_width = terminal_size.columns
     except:
         try:
-            screen_height, screen_width = os.popen('stty size', 'r').read().split()
+            screen_height, screen_width = os.popen('stty size 2> /dev/null', 'r').read().split()
         except:
             screen_height, screen_width = 24, 80
+    screen_height = int( screen_height)
+    screen_width = int( screen_width)
 
     # process each file:
     if mode == MODE_INTERACTIVE:
