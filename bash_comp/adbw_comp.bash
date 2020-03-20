@@ -97,7 +97,12 @@ _adbw_completion() {
         then
             _adbw_completion_filedir "$cur" "$quote"
         fi
-        COMPREPLY=( "${COMPREPLY[@]}" $(compgen -f -- "$cur" | _adbw_completion_escape "$quote"))
+        if type _filedir > /dev/null
+        then
+            _filedir
+        else
+            COMPREPLY=( "${COMPREPLY[@]}" $(compgen -f -- "$cur" | _adbw_completion_escape "$quote"))
+        fi
     elif [[ "${COMP_WORDS[1]}" = "shell" ]]
     then
         if [[ "$cur" = *'*'* ]]
