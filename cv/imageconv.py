@@ -150,7 +150,7 @@ def normalize( mat, info, args) :
             return np.clip( mat.astype( np.float32), 0, norm_max) * 255.0 / norm_max
     elif args.input_type in [ "bgr", "rgb", "rgba", "bgra"] :
         if norm_max >= 0:
-            print( "Warning: option -n/--normalize only works with 1-channel input, ignored.")
+            print( "Warning: option -n/--normalize only works with 1-channel input, ignored.", file = sys.stderr)
         b = mat[ :, :, 0]
         g = mat[ :, :, 1]
         r = mat[ :, :, 2]
@@ -166,7 +166,7 @@ def normalize( mat, info, args) :
 
 def yuv2bgr( yuv_mat, standard, fullrange, info, args) :
     if args.normalize != None :
-        print( "Warning: option -n, --normalize only work with 1-channel input, ignored.")
+        print( "Warning: option -n, --normalize only work with 1-channel input, ignored.", file = sys.stderr)
     y = yuv_mat[ :, :, 0]
     y_min = y.min()
     y_max = y.max()
@@ -200,11 +200,11 @@ def yuv2bgr( yuv_mat, standard, fullrange, info, args) :
             exit( 1)
     else : # if video-range
         if y_min < 16 or y_max > 235 :
-            print( "Warning: Y-channel data exceed video-range!")
+            print( "Warning: Y-channel data exceed video-range!", file = sys.stderr)
         if u_min < 16 or u_max > 240 :
-            print( "Warning: U-channel data exceed video-range!")
+            print( "Warning: U-channel data exceed video-range!", file = sys.stderr)
         if v_min < 16 or v_max > 240 :
-            print( "Warning: V-channel data exceed video-range!")
+            print( "Warning: V-channel data exceed video-range!", file = sys.stderr)
         yy = np.clip( y, 16, 235).astype( np.float) - 16
         uu = np.clip( u, 16, 240).astype( np.float) - 128
         vv = np.clip( v, 16, 240).astype( np.float) - 128
@@ -349,7 +349,7 @@ def encode_image( path, ext, mat) :
     # use imencode() instead of imwrite() to avoid failure of opencv with non-ascii path:
     ret, data = cv.imencode( ext, mat)
     if not ret :
-        print( "Warning: fail to encode '" + path + "'.")
+        print( "Warning: fail to encode '" + path + "'.", file = sys.stderr)
         return
     data.tofile( path)
 
@@ -439,7 +439,7 @@ def save_mat( mat, info, args) :
         h = info[ "height"]
         w = info[ "width"]
         if h % 2 != 0 or w % 2 != 0 :
-            print( "Error: cannot save nv21 image with height = " + str( h) + " and width = " + str( w))
+            print( "Error: cannot save nv21 image with height = " + str( h) + " and width = " + str( w), file = sys.stderr)
             return
         if info[ "channel"] == 1 :
             mat = np.uint8( np.rint( mat))
@@ -449,7 +449,7 @@ def save_mat( mat, info, args) :
         h = info[ "height"]
         w = info[ "width"]
         if h % 2 != 0 or w % 2 != 0 :
-            print( "Error: cannot save nv12 image with height = " + str( h) + " and width = " + str( w))
+            print( "Error: cannot save nv12 image with height = " + str( h) + " and width = " + str( w), file = sys.stderr)
             return
         if info[ "channel"] == 1 :
             mat = np.uint8( np.rint( mat))
@@ -484,7 +484,7 @@ def process_image( mat, filename, args) :
         save_mat( mat.astype( np.float), info, args)
     elif info[ "channel"] == 2:
         if args.normalize is not None :
-            print( "Warning: option -n/--normalize only works with 1-channel input, ignored.")
+            print( "Warning: option -n/--normalize only works with 1-channel input, ignored.", file = sys.stderr)
         y = mat[ :, :, 0]
         a = mat[ :, :, 1]
         info[ "y_range"] = "[" + str( y.min()) + "," + str( y.max()) + "]"
@@ -502,7 +502,7 @@ def process_image( mat, filename, args) :
         save_mat( bgra.astype( np.uint8), info, args)
     elif info[ "channel"] >= 3:
         if args.normalize is not None :
-            print( "Warning: option -n/--normalize only works with 1-channel input, ignored.")
+            print( "Warning: option -n/--normalize only works with 1-channel input, ignored.", file = sys.stderr)
         b = mat[ :, :, 0]
         g = mat[ :, :, 1]
         r = mat[ :, :, 2]
@@ -619,7 +619,7 @@ def process_raw( array, filename, args) :
         print( "ERROR: internal error process_raw()")
         exit( 1)
     if not get_size( array, info, args) :
-        print( "Warning: invalid size configuration for input file '" + filename + "'")
+        print( "Warning: invalid size configuration for input file '" + filename + "'", file = sys.stderr)
         return
     stride = int( info[ "stride"])
     scanline = int( info[ "scanline"])
@@ -691,7 +691,7 @@ def process_raw( array, filename, args) :
 
 def process( filename, args) :
     if not os.path.isfile( filename) :
-        print( "Warning: input file '" + filename + "' does not exist, ignored.")
+        print( "Warning: input file '" + filename + "' does not exist, ignored.", file = sys.stderr)
         return
     try :
         if args.jump_through > 0:
@@ -701,14 +701,14 @@ def process( filename, args) :
         else:
             array = np.fromfile( filename, dtype = np.uint8)
     except :
-        print( "Warning: cannot read from file '" + filename + "', ignored.")
+        print( "Warning: cannot read from file '" + filename + "', ignored.", file = sys.stderr)
         return
 
     if args.input_type in [ "jpg", "png", "bmp"] :
         # use imdecode() instead of imread() to avoid failure of opencv with non-ascii path
         mat = cv.imdecode( array, cv.IMREAD_UNCHANGED)
         if mat is None :
-            print( "Warning: fail to decode image '" + filename + "', ignored.")
+            print( "Warning: fail to decode image '" + filename + "', ignored.", file = sys.stderr)
             return
         process_image( mat, filename, args)
     else :
@@ -754,7 +754,7 @@ def main( args) :
     except :
         pass
     if len( files) > 1 and args.path and not os.path.isdir( args.path) :
-        print( "Error: PATH should be directory for multiple input files!")
+        print( "Error: PATH should be directory for multiple input files!", file = sys.stderr)
         exit( 1)
     if os == "posix" :
         for file in files :
