@@ -14,7 +14,7 @@ import numpy as np
 
 DESC_STR = "Convert image(s) as designated format."
 USAGE_STR = "imageconv.py [-h] [-p PATH] [-c COL] [-r ROW] [-s STRIDE] [-l SCANLINE] " + \
-            "-i FORMAT -o FORMAT [-n NORMALIZE] " + \
+            "[-j BYTES] -i FORMAT -o FORMAT [-n NORMALIZE] " + \
             "[--] FILE [FILE ...]"
 IMAGE_TYPES = [
     "8u",
@@ -694,7 +694,12 @@ def process( filename, args) :
         print( "Warning: input file '" + filename + "' does not exist, ignored.")
         return
     try :
-        array = np.fromfile( filename, dtype = np.uint8)
+        if args.jump_through > 0:
+            with open( filename, 'rb') as inp:
+                inp.seek( args.jump_through)
+                array = np.fromfile( inp, dtype = np.uint8)
+        else:
+            array = np.fromfile( filename, dtype = np.uint8)
     except :
         print( "Warning: cannot read from file '" + filename + "', ignored.")
         return
@@ -725,6 +730,8 @@ def main( args) :
             help = "data format of input image")
     parser.add_argument( "-o", "--output-type", choices = IMAGE_TYPES, required = True,
             help = "data format of output image")
+    parser.add_argument( "-j", "--jump-through", type = int, default = 0,
+            help = "number of bytes to jump through at the begining of input file")
     parser.add_argument( "--input-yuv-color", choices = YUV_COLOR_STDS,
             help = "color space of input yuv data, default is BT.601")
     parser.add_argument( "--input-yuv-range", choices = YUV_RANGES,
