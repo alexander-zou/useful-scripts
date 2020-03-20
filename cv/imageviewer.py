@@ -48,6 +48,8 @@ def load_bgra( path):
     with open( path, 'rb') as inf:
         data = np.frombuffer( inf.read(), dtype = np.uint8)
     mat = cv.imdecode( data, cv.IMREAD_UNCHANGED)
+    if mat is None:
+        raise Exception( 'WARNING: cannot decode image data')
     height = int( mat.shape[ 0])
     width = int( mat.shape[ 1])
 
@@ -58,7 +60,7 @@ def load_bgra( path):
     elif mat.dtype == np.float32:
         mat = ( mat * 255 + 0.5).astype( np.uint8)
     else:
-        raise Exception( 'unsupported data type: ' + str( mat.dtype))
+        raise Exception( 'WARNING: unsupported data type: ' + str( mat.dtype))
 
     try:
         channel = int( mat.shape[ 2])
@@ -119,35 +121,35 @@ def main( args) :
     # check arguments:
     if args.interactive:
         if args.cols is not None or args.rows is not None or args.scale is not None:
-            print( "ERROR: cannot set resolution with interactive mode.")
+            print( "ERROR: cannot set resolution with interactive mode.", file = sys.stderr)
             exit( ERR_ARGS)
         # TODO: import gui lib
         mode = MODE_INTERACTIVE
     elif args.scale is not None:
         if args.scale <= 0 or args.scale >= 1000:
-            print( "ERROR: scale setting '%f' out of range!" % ( args.scale))
+            print( "ERROR: scale setting '%f' out of range!" % ( args.scale), file = sys.stderr)
             exit( ERR_ARGS)
         if args.cols is not None:
-            print( "ERROR: conflict settings of display scale and width")
+            print( "ERROR: conflict settings of display scale and width", file = sys.stderr)
             exit( ERR_ARGS)
         elif args.rows is not None:
-            print( "ERROR: conflict settings of display scale and height")
+            print( "ERROR: conflict settings of display scale and height", file = sys.stderr)
             exit( ERR_ARGS)
         mode = MODE_SCALING
     elif args.cols is not None:
         if args.cols < 1:
-            print( "ERROR: invalid width setting '%d' !" % ( args.cols))
+            print( "ERROR: invalid width setting '%d' !" % ( args.cols), file = sys.stderr)
             exit( ERR_ARGS)
         if args.rows is not None:
             if args.rows < 1:
-                print( "ERROR: invalid height setting '%d' !" % ( args.rows))
+                print( "ERROR: invalid height setting '%d' !" % ( args.rows), file = sys.stderr)
                 exit( ERR_ARGS)
             mode = MODE_FIXED_RESOLUTION
         else:
             mode = MODE_FIXED_WIDTH
     elif args.rows is not None:
         if args.rows < 1:
-            print( "ERROR: invalid height setting '%d' !" % ( args.rows))
+            print( "ERROR: invalid height setting '%d' !" % ( args.rows), file = sys.stderr)
             exit( ERR_ARGS)
         mode = MODE_FIXED_HEIGHT
     else:
@@ -171,7 +173,7 @@ def main( args) :
         elif os.path.isfile( elem) or os.path.islink( elem):
             expanded_files.append( elem)
         else:
-            print( "WARNING: cannot locate file '%s', ignored." % ( elem))
+            print( "WARNING: cannot locate file '%s', ignored." % ( elem), file = sys.stderr)
 
     try:
         import shutil
@@ -189,7 +191,7 @@ def main( args) :
     # process each file:
     if mode == MODE_INTERACTIVE:
         #TODO
-        print( "ERROR: TODO")
+        print( "ERROR: TODO", file = sys.stderr)
         exit( ERR_INTERAL)
     else:
         for path in expanded_files:
@@ -199,10 +201,10 @@ def main( args) :
                 width = int( img.shape[ 1])
             except Exception as e:
                 import traceback
-                print( traceback.format_exc())
-                print( type( e))
-                print( e)
-                print( "WARNING: failed loading file '%s', ignored." % path)
+                print( traceback.format_exc(), file = sys.stderr)
+                print( type( e), file = sys.stderr)
+                print( e, file = sys.stderr)
+                print( "WARNING: failed loading file '%s', ignored." % path, file = sys.stderr)
                 continue
             if len( expanded_files) > 1:
                 print( "\n" + path)
@@ -228,7 +230,7 @@ def main( args) :
                 resize_height = int( height * args.scale + 0.5)
                 resize_width = int( width * args.scale + 0.5)
             else:
-                raise Exception( 'ERROR: internal error with mode')
+                raise Exception( 'ERROR: internal error with mode', file = sys.stderr)
             resize_width = np.clip( resize_width, 1, 1000)
             resize_height = np.clip( resize_height, 1, 1000)
             resized_img = cv.resize( img, ( resize_width, resize_height), interpolation = cv.INTER_AREA)
