@@ -21,7 +21,7 @@ _imageviewer_py_completion() {
                 return;;
         esac
     fi
-    if type _filedir > /dev/null
+    if type -t _filedir > /dev/null 2>&1
     then
         COMPREPLY=($(compgen -W "$OPT_LIST" -- "$cur"))
         _filedir

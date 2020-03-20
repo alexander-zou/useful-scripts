@@ -97,7 +97,7 @@ _adbw_completion() {
         then
             _adbw_completion_filedir "$cur" "$quote"
         fi
-        if type _filedir > /dev/null
+        if type -t _filedir > /dev/null 2>&1
         then
             _filedir
         else
