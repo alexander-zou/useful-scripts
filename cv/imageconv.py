@@ -761,8 +761,12 @@ def main( args) :
             process( file, args)
     else :
         for file_arg in files :
-            for file in glob.glob( file_arg) :
-                process( file, args)
+            expanded_file_arg = glob.glob( file_arg)
+            if len( expanded_file_arg) > 0:
+                for f in  expanded_file_arg:
+                    process( f, args)
+            else:
+                process( file_arg, args)
 
 if __name__ == "__main__" :
     main( sys.argv[ 1:])
