@@ -3,7 +3,7 @@
 # Created by zoujiachen@megvii.com
 # 2018-08-15
 
-
+from __future__ import print_function
 import sys
 import os
 import glob
@@ -756,7 +756,7 @@ def main( args) :
     if len( files) > 1 and args.path and not os.path.isdir( args.path) :
         print( "Error: PATH should be directory for multiple input files!", file = sys.stderr)
         exit( 1)
-    if os == "posix" :
+    if os.name == "posix" :
         for file in files :
             process( file, args)
     else :
