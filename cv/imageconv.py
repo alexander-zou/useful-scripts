@@ -65,7 +65,10 @@ def verbose( info) :
 
 def prompt( msg, default) :
     try :
-        result = raw_input( msg + " [Y/n]" if default else " [y/N]")
+        if sys.version_info.major <= 2:
+            result = raw_input( msg + " [Y/n]" if default else " [y/N]")
+        else:
+            result = input( msg + " [Y/n]" if default else " [y/N]")
         if len( result) <= 0 :
             return default
         elif result.lower().startswith( "y") :
