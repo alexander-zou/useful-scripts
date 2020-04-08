@@ -101,6 +101,7 @@ NewFile() {
 	echo '#!/usr/bin/env python2' >> "$SOURCE_FILE"
 	echo '# -*- coding: UTF-8 -*-' >> "$SOURCE_FILE"
 	echo >> "$SOURCE_FILE"
+	echo 'from __future__ import print_function' >> "$SOURCE_FILE"
 	echo 'import sys' >> "$SOURCE_FILE"
 	echo 'import os' >> "$SOURCE_FILE"
 	echo 'import random' >> "$SOURCE_FILE"
