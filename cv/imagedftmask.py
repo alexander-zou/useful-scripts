@@ -130,7 +130,7 @@ if __name__ == '__main__':
             output_path = os.path.join( args.destination, os.path.basename( path) + args.suffix)
         if os.path.isfile( output_path) \
                 and not args.force \
-                and not prompt( "File '" + path + "' already exists, overwrite?", True):
+                and not prompt( "File '" + output_path + "' already exists, overwrite?", True):
             continue
         if args.format == 'auto':
             ext = os.path.splitext( output_path)[ 1]
@@ -164,7 +164,7 @@ if __name__ == '__main__':
             else:
                 raise Exception( 'failed encoding with imencode()')
         except Exception as e:
-            print( "failed to output image '%s', skipped: %s" % ( output_path, str(e)), file = sys.stderr)
+            print( "WARNING: failed to output image '%s', skipped: %s" % ( output_path, str(e)), file = sys.stderr)
             continue
 
 # End of 'imagedftmask.py' 

@@ -90,7 +90,7 @@ if __name__ == '__main__':
             output_path = os.path.join( args.destination, os.path.basename( path) + args.suffix)
         if os.path.isfile( output_path) \
                 and not args.force \
-                and not prompt( "File '" + path + "' already exists, overwrite?", True):
+                and not prompt( "File '" + output_path + "' already exists, overwrite?", True):
             continue
         if args.format == 'auto':
             ext = os.path.splitext( output_path)[ 1]
@@ -102,7 +102,7 @@ if __name__ == '__main__':
             data = np.frombuffer( inf.read(), dtype = np.uint8)
             raw = cv2.imdecode( data, cv2.IMREAD_UNCHANGED)
             if raw is None:
-                print( "WARNING: failed decoding image '%s', skipped!" % ( path))
+                print( "WARNING: failed decoding image '%s', skipped!" % ( path), file = sys.stderr)
                 continue
             # drop alpha channel:
             if len( raw.shape) == 3 and raw.shape[ 2] in ( 2, 4):
@@ -116,14 +116,14 @@ if __name__ == '__main__':
             try:
                 os.makedirs( folder)
             except Exception as e:
-                print( "failed to create output folder '%s': %s" % ( folder, str( e)))
+                print( "failed to create output folder '%s': %s" % ( folder, str( e)), file = sys.stderr)
                 # do NOT exit here, try writing the result anyway.
         ret, output_data = cv2.imencode( ext, spec)
         if ret:
             output_data.tofile( output_path)
         else:
-            print( 'failed encoding output image!', file = sys.stderr)
-            exit( 1)
+            print( 'WARNING: failed encoding output image, skipped!', file = sys.stderr)
+            continue
 
 
 # End of 'imagedft.py' 
