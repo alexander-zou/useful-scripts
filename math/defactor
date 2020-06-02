@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+
+###
+# 
+# @File   : defactor   
+# @Author : alexander.here@gmail.com
+# @Date   : 2020-06-02 12:05 CST(+0800)   
+# @Brief  : Prime Factorization
+# 
+###
+
+PROGRAM="$0"
+
+Help()
+{
+	echo -en "Usage:\n\t"
+	echo     "$PROGRAM -h           # Show this message"
+	echo -en "\t"
+	echo     "$PROGRAM NUM [NUM...] # Show factors of each NUM"
+	echo -en "\t"
+	echo     "$PROGRAM              # Read numbers from stdin"
+	echo
+	echo -e "Note:\tDo NOT support scientific notation."
+	exit 1
+}
+
+ProcessNumber()
+{
+    num="$1"
+    echo -n "$num"
+    first_factor=yes
+    f=2
+    while [ "$num" -ge "$f" ]
+    do
+        count=0
+        while [ "$((num % f))" -eq 0 ]
+        do
+            num="$((num / f))"
+            count=$((count + 1))
+        done
+        if [[ "$count" -gt 0 ]]
+        then
+            if [[ "$first_factor" ]]
+            then
+                echo -n " = "
+                first_factor=
+            else
+                echo -n " x "
+            fi
+            echo -n "$f"
+            if [[ "$count" -gt 1 ]]
+            then
+                echo -n "^$count"
+            fi
+        fi
+        f="$((f + 1))"
+    done
+    if [[ "$first_factor" ]]
+    then
+        echo " = $num"
+    else
+        echo
+    fi
+}
+
+Process()
+{
+    num="$1"
+    if [[ "$num" =~ ^[0-9]+$ ]]
+    then
+        ProcessNumber "$num"
+        return 0
+    else
+        echo "Error: '$num' is not nature number, ignored." >&2
+        return 1
+    fi
+}
+
+ret=0
+
+if [ "$#" -ge 1 ]
+then
+	if [ "$1" == '-h' ]
+	then
+		Help
+	fi
+	while [ "$#" -ge 1 ]
+	do
+		Process "$1"
+        ret="$((ret|$?))"
+        shift
+	done
+else # read from stdin
+    while read line
+    do
+        Process "$line"
+        ret="$((ret|$?))"
+    done
+fi
+
+exit "$ret"
+
+# End of 'defactor' 
+
