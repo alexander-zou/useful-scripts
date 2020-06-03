@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+###
+# 
+# @File   : lcm   
+# @Author : alexander.here@gmail.com
+# @Date   : 2020-06-03 10:51 CST(+0800)   
+# @Brief  : Calculate Least Common Multiple
+# 
+###
+
+PROGRAM="$0"
+
+Help()
+{
+	echo -en "Usage:\t"
+	echo     "$PROGRAM N M	# Show Least Common Multiple of Positive Integers N & M"
+}
+
+if [ $# -eq 0 ] || [ "$1" == '-h' ]
+then
+    Help
+    exit 0
+fi
+
+if [ $# -eq 1 ]
+then
+    echo "ERROR: need TWO parameters!" >&2
+    Help
+    exit 1
+fi
+
+Check()
+{
+    if [[ ! "$1" =~ ^[0-9]+$ || "$1" -le 0 ]]
+    then
+        echo "ERROR: '$1' is NOT positive integer!" >&2
+        Help
+        exit 1
+    fi
+}
+
+Check "$1"
+Check "$2"
+
+Gcd()
+{
+    n="$1"
+    m="$2"
+    while [[ "$n" -gt 0 ]]
+    do
+        t="$((m%n))"
+        m="$n"
+        n="$t"
+    done
+    echo "$m"
+}
+
+gcd=$(Gcd "$1" "$2")
+echo "$(($1 / gcd * $2))"
+
+exit 0
+
+# End of 'lcm' 
+
