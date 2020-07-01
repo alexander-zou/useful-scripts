@@ -18,21 +18,18 @@ import numpy as np
 import cv2
 
 def prompt( msg, default) :
-    try :
-        if sys.version_info.major <= 2:
-            result = raw_input( msg + " [Y/n]" if default else " [y/N]")
-        else:
-            result = input( msg + " [Y/n]" if default else " [y/N]")
-        if len( result) <= 0 :
-            return default
-        elif result.lower().startswith( "y") :
-            return True
-        elif result.lower().startswith( "n") :
-            return False
-        else :
-            return prompt( msg, default)
-    except :
+    if sys.version_info.major <= 2:
+        result = raw_input( msg + " [Y/n]" if default else " [y/N]")
+    else:
+        result = input( msg + " [Y/n]" if default else " [y/N]")
+    if len( result) <= 0 :
         return default
+    elif result.lower().startswith( "y") :
+        return True
+    elif result.lower().startswith( "n") :
+        return False
+    else :
+        return prompt( msg, default)
 
 def dft_spectrum( mat, target_range = 255):
     height, width = mat.shape[:2]
