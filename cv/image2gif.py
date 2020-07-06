@@ -2,7 +2,6 @@
 # -*- coding: UTF-8 -*-
 
 '''
-Copyright (c) 2020 JIIOV. All Rights Reserved
 
 @File   : image2gif.py   
 @Author : alexander.here@gmail.com 
