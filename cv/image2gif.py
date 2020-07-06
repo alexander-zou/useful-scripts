@@ -52,7 +52,7 @@ def load_images( files, title = 'none'):
             else:
                 raw = cv2.cvtColor( raw, cv2.COLOR_BGR2RGB)
         if title != 'none':
-            title_mat = np.zeros( ( TITLE_HEIGHT + 4, raw.shape[ 1], 3), dtype = np.uint8)
+            title_mat = np.zeros( ( TITLE_HEIGHT + 4, raw.shape[ 1], 3), dtype = raw.dtype)
             if title == 'name':
                 title_text = os.path.basename( path)
             elif title == 'path':
