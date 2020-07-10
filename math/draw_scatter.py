@@ -13,6 +13,7 @@
 import os
 import csv
 import numpy as np
+import warnings
 import matplotlib.pyplot as plt
 import tkinter as tk
 from numpy.lib.npyio import load
@@ -207,6 +208,7 @@ var_tltype = tk.StringVar()
 var_tln = tk.StringVar()
 
 plt.rcParams[ 'font.sans-serif'] = [ 'SimHei', 'Heiti TC', 'Adobe Heiti Std', 'Adobe Fan Heiti Std']
+warnings.simplefilter( 'ignore', np.RankWarning)
 
 # Core:
 
