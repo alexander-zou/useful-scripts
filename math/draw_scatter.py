@@ -357,7 +357,7 @@ class SerialManager:
                         range_end = to_idx + 1
                     if range_start > range_end:
                         range_start, range_end = range_end - 1, range_start + 1
-                    for col in range( from_idx, to_idx + 1):
+                    for col in range( range_start, range_end):
                         if x_idx >= row_count or y_idx >= row_count or col >= len( sheet[ x_idx]) or col >= len( sheet[ y_idx]) \
                                 or sheet[ x_idx][ col].strip() == '' or sheet[ y_idx][ col].strip() == '':
                             continue
