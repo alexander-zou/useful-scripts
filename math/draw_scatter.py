@@ -567,8 +567,7 @@ entry_n.pack( side = tk.LEFT)
 frame_filter = tk.Frame( window_main)
 frame_filter.pack( side = tk.TOP, fill = tk.BOTH, expand = True, padx = 4, pady = 4)
 
-tk.Label( frame_filter, anchor = tk.W, text = "Filters:").pack( side = tk.TOP, fill = tk.X)
-#text_filter = tk.Text( frame_filter, height = 10, borderwidth = 2, relief = tk.SUNKEN, highlightthickness = 0)
+tk.Label( frame_filter, anchor = tk.W, text = "Filters: (python expression, e.g. \"${A}=='type1' and int(${2})<9\")").pack( side = tk.TOP, fill = tk.X)
 text_filter = tkst.ScrolledText( frame_filter, height = 10, borderwidth = 2, relief = tk.SUNKEN, highlightthickness = 0)
 text_filter.pack( side = tk.BOTTOM, fill = tk.BOTH, expand = True)
 
