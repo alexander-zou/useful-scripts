@@ -34,7 +34,7 @@ COLORS = [
     '#069af3', # azure
     '#ef4026', # tomato
     '#029386', # teal
-    '#fbdd7e', # wheat
+    '#fac205', # goldenrod
     '#580f41', # plum
     '#bbf90f', # yellowgreen
     '#00ffff', # cyan
@@ -43,7 +43,7 @@ COLORS = [
     '#a9561e', # sienna
 ]
 
-MARKERS = [ 'o', '^', 'x', 'd', 'v', '+', 's', '<', '1', '*', '>',]
+MARKERS = [ 'o', '^', 'x', 'd', '+', 'v', 's', '<', '1', '*', '>',]
 
 # Basic Functions:
 
@@ -55,7 +55,7 @@ def choose_color( idx):
         return COLORS[ idx]
     hex = [ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f']
     color = '#'
-    color += hex[ ( 2 + idx * 9) % 16]
+    color += hex[ ( 2 + idx * 13) % 16]
     color += hex[ ( 3 + idx * 1) % 16]
     color += hex[ ( 2 + idx * 7) % 16]
     color += hex[ ( 4 + idx * 3) % 16]
@@ -248,8 +248,12 @@ class SerialManager:
             SerialManager.serial_list[ -1].file = SerialManager.serial_list[ -2].file
             SerialManager.serial_list[ -1].from_ = SerialManager.serial_list[ -2].from_
             SerialManager.serial_list[ -1].to = SerialManager.serial_list[ -2].to
+            SerialManager.serial_list[ -1].dir = SerialManager.serial_list[ -2].dir
             SerialManager.serial_list[ -1].x = SerialManager.serial_list[ -2].x
             SerialManager.serial_list[ -1].y = SerialManager.serial_list[ -2].y
+            SerialManager.serial_list[ -1].trend = SerialManager.serial_list[ -2].trend
+            SerialManager.serial_list[ -1].n = SerialManager.serial_list[ -2].n
+            SerialManager.serial_list[ -1].filters = SerialManager.serial_list[ -2].filters
         return pos
     def remove( idx):
         if idx >= 0 and idx < len( SerialManager.serial_list):
