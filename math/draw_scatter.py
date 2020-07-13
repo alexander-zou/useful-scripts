@@ -67,6 +67,8 @@ def choose_color( idx):
 csv_cache = dict()
 
 def load_csv_sheet( path):
+    if len( path) <= 0:
+        raise Exception( "Missing CSV file!")
     abs_path = os.path.abspath( path)
     if abs_path in csv_cache:
         return csv_cache[ abs_path]
@@ -241,15 +243,29 @@ class Serial:
         self.trend      = other.trend
         self.n          = other.n
         self.filters    = other.filters
+    def __eq__( self, other):
+        return isinstance( other, Serial) \
+            and self.name       == other.name \
+            and self.file       == other.file \
+            and self.dir        == other.dir \
+            and self.from_      == other.from_ \
+            and self.to         == other.to \
+            and self.x          == other.x \
+            and self.y          == other.y \
+            and self.trend      == other.trend \
+            and self.n          == other.n \
+            and self.filters    == other.filters \
     
 class SerialManager:
     serial_list = list()
     loaded_pos = -1
     new_group_id = 1
+    changed = True
     def add( name = None):
         if name is None:
             name = "Group " + str( SerialManager.new_group_id)
         SerialManager.new_group_id += 1
+        SerialManager.changed = True
         pos = len( SerialManager.serial_list)
         SerialManager.serial_list.append( Serial( name))
         if len( SerialManager.serial_list) > 1:
@@ -265,6 +281,7 @@ class SerialManager:
         return pos
     def remove( idx):
         if idx >= 0 and idx < len( SerialManager.serial_list):
+            SerialManager.changed = True
             del SerialManager.serial_list[ idx]
             if idx == SerialManager.loaded_pos:
                 SerialManager.loaded_pos = -1
@@ -289,7 +306,9 @@ class SerialManager:
         if idx is None:
             idx = SerialManager.loaded_pos
         if idx >= 0 and idx < len( SerialManager.serial_list):
-            SerialManager.serial_list[ idx].set( data)
+            if SerialManager.serial_list[ idx] != data:
+                SerialManager.changed = True
+                SerialManager.serial_list[ idx].set( data)
     def count():
         return len( SerialManager.serial_list)
     def id_range():
@@ -306,7 +325,7 @@ class SerialManager:
             return ret
         return ''
     def draw():
-        if len( SerialManager.serial_list) <= 0:
+        if len( SerialManager.serial_list) <= 0 or not SerialManager.changed:
             return
         plt.cla()
         for i in SerialManager.id_range():
@@ -383,6 +402,8 @@ class SerialManager:
                     plt.plot( trend_x, trend_y, color = color + '30')
             except Exception as e:
                 raise Exception( "Failed drawing '" + name + "': " + str( e))
+            finally:
+                SerialManager.changed = False
         csv_cache.clear()
         plt.title( SerialManager.title())
         plt.grid()
