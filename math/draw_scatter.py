@@ -64,7 +64,12 @@ def choose_color( idx):
     color += hex[ ( 5 + idx * 5) % 16]
     return color
 
+csv_cache = dict()
+
 def load_csv_sheet( path):
+    abs_path = os.path.abspath( path)
+    if abs_path in csv_cache:
+        return csv_cache[ abs_path]
     if not os.path.isfile( path):
         raise Exception( "File '" + path + "' NOT exists!")
     try:
@@ -75,6 +80,7 @@ def load_csv_sheet( path):
             sheet = []
             for row in reader:
                 sheet.append( list( row))
+            csv_cache[ abs_path] = sheet
             return sheet
     except Exception as e:
         raise Exception( "Failed parsing CSV file: " + str( e))
@@ -377,6 +383,7 @@ class SerialManager:
                     plt.plot( trend_x, trend_y, color = color + '30')
             except Exception as e:
                 raise Exception( "Failed drawing '" + name + "': " + str( e))
+        csv_cache.clear()
         plt.title( SerialManager.title())
         plt.grid()
         plt.legend()
