@@ -515,6 +515,7 @@ def click_serial( evt = None):
         serial_2_ui( SerialManager.load( sels[ 0]))
 
 def click_update( evt = None):
+    SerialManager.changed = True
     save_current_serial()
 
 def click_browse( evt = None):
