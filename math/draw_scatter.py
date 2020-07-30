@@ -30,6 +30,8 @@ DIR_HORIZONTAL = 1
 TL_NONE = 'NONE'
 TL_AVG = 'Moving Average'
 TL_POLY = 'Polynomial'
+TL_VERTICAL = 'Vertical'
+TL_HORIZONTAL = 'Horizontal'
 
 COLORS = [
     '#069af3', # azure
@@ -153,7 +155,23 @@ def check_filters( filters, sheet, direction, idx):
     return True
 
 def generate_trend( x, y, t, n):
-    if t == TL_AVG:
+    if t == TL_HORIZONTAL:
+        try:
+            n = float( n)
+        except:
+            raise Exception( 'Invalid trendline param: N = ' + str( n) + ' (number expected)')
+        yy = [ n, n]
+        xx = [ min( x), max( x)]
+        return xx, yy
+    elif t == TL_VERTICAL:
+        try:
+            n = float( n)
+        except:
+            raise Exception( 'Invalid trendline param: N = ' + str( n) + ' (number expected)')
+        xx = [ n, n]
+        yy = [ min( y), max( y)]
+        return xx, yy
+    elif t == TL_AVG:
         try:
             n = int( n)
             if n < 2:
@@ -591,7 +609,7 @@ frame_trendline = tk.Frame( window_main)
 frame_trendline.pack( side = tk.TOP, fill = tk.X, padx = 4, pady = 4)
 
 tk.Label( frame_trendline, anchor = tk.W, text = "Trendline:").pack( side = tk.LEFT)
-combobox_tltype = ttk.Combobox( frame_trendline, textvariable = var_tltype, state = 'readonly', values = ( TL_NONE, TL_AVG, TL_POLY))
+combobox_tltype = ttk.Combobox( frame_trendline, textvariable = var_tltype, state = 'readonly', values = ( TL_NONE, TL_POLY, TL_AVG, TL_VERTICAL, TL_HORIZONTAL))
 combobox_tltype.current( 0)
 combobox_tltype.pack( side = tk.LEFT)
 
