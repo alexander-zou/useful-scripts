@@ -15,7 +15,7 @@ _c_run_completion() {
     then
         COMPREPLY=($(compgen -W "new last again show path help" -- "${COMP_WORDS[1]}"))
     else
-        COMPREPLY=($(compgen -W "-Wall -g -O0 -O1 -O2 -O3 -std -I -D -U -l -Wa, -Wl, -Wp, -Werror,-W -pedantic -pedantic-errors" -- "${COMP_WORDS[$COMP_CWORD]}"))
+        COMPREPLY=($(compgen -W "-Wall -Wextra -g -O0 -O1 -O2 -O3 -std -I -D -U -l -Wa, -Wl, -Wp, -Werror,-W -pedantic -pedantic-errors" -- "${COMP_WORDS[$COMP_CWORD]}"))
         if [[ "${#COMPREPLY[@]}" -eq 1 ]]
         then
             case "${COMPREPLY[0]}" in
