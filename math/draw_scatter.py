@@ -16,7 +16,6 @@ import numpy as np
 import warnings
 import matplotlib.pyplot as plt
 import tkinter as tk
-from numpy.lib.npyio import load
 import tkinter.scrolledtext as tkst
 import tkinter.messagebox as tkmb
 from tkinter import ttk
