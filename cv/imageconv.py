@@ -29,7 +29,8 @@ IMAGE_TYPES = [
     "nv12",
     "jpg",
     "png",
-    "bmp"
+    "bmp",
+    "csv",
 ]
 YUV_COLOR_STDS = [ "bt601", "bt709", "bt2020"]
 YUV_RANGES = [
@@ -334,6 +335,8 @@ def prepare_save( info, args) :
             info[ "output"] = path + "/" + info[ "filename"] + ".png"
         elif args.output_type == "bmp" :
             info[ "output"] = path + "/" + info[ "filename"] + ".bmp"
+        elif args.output_type == "csv" :
+            info[ "output"] = path + "/" + info[ "filename"] + ".csv"
         elif args.output_type == "nv21" :
             info[ "output"] = path + "/" + info[ "filename"] + ".nv21"
         elif args.output_type == "nv12" :
@@ -352,6 +355,27 @@ def encode_image( path, ext, mat) :
         print( "Warning: fail to encode '" + path + "'.", file = sys.stderr)
         return
     data.tofile( path)
+
+def save_csv( mat, info) :
+    height = info[ "height"]
+    width = info[ "width"]
+    ch = info[ "channel"]
+    if info[ "origin_dtype"] == np.uint8:
+        mat = np.round( mat).astype( np.uint8)
+    elif info[ "origin_dtype"] == np.uint16:
+        mat = np.round( mat * 256).astype( np.uint16)
+    elif info[ "origin_dtype"] == np.float32:
+        mat /= 255.0
+    with open( info[ "output"], "w") as out:
+        for i in range( height):
+            for j in range( width):
+                if j > 0:
+                    out.write( ",")
+                if ch > 1:
+                    out.write( str( tuple( mat[ i, j])))
+                else:
+                    out.write( str( mat[ i, j]))
+            out.write( "\n")
 
 def is_same_path( path1, path2):
     try:
@@ -378,6 +402,8 @@ def save_mat( mat, info, args) :
         encode_image( info[ "output"], ".png", mat)
     elif args.output_type == "bmp" :
         encode_image( info[ "output"], ".bmp", mat)
+    elif args.output_type == 'csv' :
+        save_csv( mat, info)
     elif args.output_type == "8u" :
         if info[ "channel"] == 3 :
             mat = cv.cvtColor( mat, cv.COLOR_BGR2GRAY)
@@ -459,6 +485,7 @@ def save_mat( mat, info, args) :
 
 def process_image( mat, filename, args) :
     info = {}
+    info[ "origin_dtype"] = mat.dtype
     info[ "height"] = int( mat.shape[ 0])
     info[ "width"] = int( mat.shape[ 1])
     try:
@@ -600,21 +627,27 @@ def process_raw( array, filename, args) :
     if args.input_type == "8u" :
         info[ "channel"] = 1
         info[ "pixel_bytes"] = 1
+        info[ "origin_dtype"] = np.uint8
     elif args.input_type == "16u" :
         info[ "channel"] = 1
         info[ "pixel_bytes"] = 2
+        info[ "origin_dtype"] = np.uint16
     elif args.input_type == "32f" :
         info[ "channel"] = 1
         info[ "pixel_bytes"] = 4
+        info[ "origin_dtype"] = np.float32
     elif args.input_type in [ "bgr", "rgb", "yuv"] :
         info[ "channel"] = 3
         info[ "pixel_bytes"] = 3
+        info[ "origin_dtype"] = np.uint8
     elif args.input_type in [ "bgra", "rgba"] :
         info[ "channel"] = 4
         info[ "pixel_bytes"] = 4
+        info[ "origin_dtype"] = np.uint8
     elif args.input_type.startswith( "nv") :
         info[ "channel"] = 3
         info[ "pixel_bytes"] = 1
+        info[ "origin_dtype"] = np.uint8
     else :
         print( "ERROR: internal error process_raw()")
         exit( 1)
@@ -711,6 +744,9 @@ def process( filename, args) :
             print( "Warning: fail to decode image '" + filename + "', ignored.", file = sys.stderr)
             return
         process_image( mat, filename, args)
+    elif args.input_type == "csv":
+        print( "ERROR: do NOT support reading from csv files!")
+        exit( 1)
     else :
         process_raw( array, filename, args)
 
