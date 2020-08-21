@@ -232,6 +232,7 @@ var_to = tk.StringVar()
 var_tltype = tk.StringVar()
 var_tln = tk.StringVar()
 
+plt.rcParams[ 'axes.unicode_minus'] = False
 plt.rcParams[ 'font.sans-serif'] = [ 'SimHei', 'Heiti TC', 'Adobe Heiti Std', 'Adobe Fan Heiti Std']
 warnings.simplefilter( 'ignore', np.RankWarning)
 
