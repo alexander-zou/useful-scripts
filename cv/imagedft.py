@@ -35,14 +35,14 @@ def dft_spectrum( mat, target_range = 255):
     height, width = mat.shape[:2]
     padded_height = cv2.getOptimalDFTSize( height)
     padded_width = cv2.getOptimalDFTSize( width)
-    padded = cv2.copyMakeBorder( mat, 0, padded_height - height, 0, padded_width - width, cv2.BORDER_CONSTANT, value = [ mat.mean()])
+    padded = cv2.copyMakeBorder( mat, 0, padded_height - height, 0, padded_width - width, cv2.BORDER_CONSTANT, value = [ 0])
 
     result_channels = []
     for channel in cv2.split( padded):
         dft = cv2.dft( channel.astype( np.float64), flags = cv2.DFT_COMPLEX_OUTPUT)
         dft = cv2.magnitude( dft[ :, :, 0], dft[ :, :, 1])
         dft = np.fft.fftshift( dft)
-        dft = cv2.log( dft + math.e)
+        dft = cv2.log( dft + 1)
         result_channels.append( dft)
     
     result = cv2.merge( result_channels)
