@@ -98,11 +98,11 @@ def parse_sheet_index( s):
         pass
     result = 0
     for ch in s.upper():
-        v = ord( ch) - ord( 'A')
-        if v < 0 or v >= 26:
+        v = ord( ch) - ord( 'A') + 1
+        if v < 1 or v > 26:
             raise Exception( "Not valid index '" + s + "'!")
         result = result * 26 + v
-    return result
+    return result - 1
 
 def parse_number( s):
     s = s.strip()
