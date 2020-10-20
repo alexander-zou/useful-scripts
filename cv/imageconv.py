@@ -17,19 +17,10 @@ USAGE_STR = "imageconv.py [-h] [-p PATH] [-c COL] [-r ROW] [-s STRIDE] [-l SCANL
             "[-j BYTES] -i FORMAT -o FORMAT [-n NORMALIZE] " + \
             "[--] FILE [FILE ...]"
 IMAGE_TYPES = [
-    "8u",
-    "16u",
-    "32f",
-    "bgr",
-    "rgb",
-    "rgba",
-    "bgra",
-    "yuv",
-    "nv21",
-    "nv12",
-    "jpg",
-    "png",
-    "bmp",
+    "u8", "u16", "f32",
+    "bgr", "rgb", "rgba", "bgra",
+    "yuv", "nv21", "nv12",
+    "jpg", "png", "bmp",
     "csv",
 ]
 YUV_COLOR_STDS = [ "bt601", "bt709", "bt2020"]
@@ -97,7 +88,7 @@ def guess_width( original, pixel_bytes, args) :
     elif pixel_bytes == 4 :
         array = np.frombuffer( array.data, dtype = np.uint32)
     else :
-        print( "ERROR: internal error guess_width()")
+        print( "ERROR: internal error guess_width()", file = sys.stderr)
         exit( 1)
     min_width = int( math.floor( math.sqrt( pixel_count) / 2))
     max_width = pixel_count // min_width
@@ -135,15 +126,15 @@ def normalize( mat, info, args) :
         norm_max = args.normalize
     else:
         norm_max = 0
-    if args.input_type in [ "8u", "16u", "32f"] :
+    if args.input_type in [ "u8", "u16", "f32"] :
         mat_max = mat.max()
         info[ "range"] = "[" + str( mat.min()) + "," + str( mat_max) + "]"
         if norm_max == 0 :
             norm_max = mat_max
         if norm_max <= 0 :
-            if args.input_type == "16u" :
+            if args.input_type == "u16" :
                 return mat.astype( np.float32) / 256.0
-            elif args.input_type == "32f" :
+            elif args.input_type == "f32" :
                 return mat.astype( np.float32) * 255.0
             else :
                 return mat.astype( np.float32)
@@ -197,7 +188,7 @@ def yuv2bgr( yuv_mat, standard, fullrange, info, args) :
             g = np.clip( yy - 0.16455313 * uu - 0.57135313 * vv, 0, 255).round().astype( np.uint8)
             b = np.clip( yy + 1.8814 * uu, 0, 255).round().astype( np.uint8)
         else :
-            print( "ERROR: internal error yuv2bgr()")
+            print( "ERROR: internal error yuv2bgr()", file = sys.stderr)
             exit( 1)
     else : # if video-range
         if y_min < 16 or y_max > 235 :
@@ -222,7 +213,7 @@ def yuv2bgr( yuv_mat, standard, fullrange, info, args) :
             g = np.clip( 1.16438356 * yy - 0.18732610 * uu - 0.65042432 * vv, 0, 255).round().astype( np.uint8)
             b = np.clip( 1.16438356 * yy + 2.14177232 * uu, 0, 255).round().astype( np.uint8)
         else :
-            print( "ERROR: internal error yuv2bgr()")
+            print( "ERROR: internal error yuv2bgr()", file = sys.stderr)
             exit( 1)
     bgr = np.empty( yuv_mat.shape, dtype = np.uint8)
     bgr[ :, :, 0] = b
@@ -248,7 +239,7 @@ def bgr2yuv( bgr_mat, standard, fullrange) :
             u = ( -0.13963006 * r - 0.36036994 * g + 0.5 * b + 127.5).round().astype( np.uint8)
             v = ( 0.5 * r - 0.45978570 * g - 0.04021430 * b + 127.5).round().astype( np.uint8)
         else :
-            print( "ERROR: internal error bgr2yuv()")
+            print( "ERROR: internal error bgr2yuv()", file = sys.stderr)
             exit( 1)
     else : # if video-range
         if standard == "bt601" :
@@ -264,7 +255,7 @@ def bgr2yuv( bgr_mat, standard, fullrange) :
             u = ( -0.12265543 * r - 0.31656026 * g + 0.43921569 * b + 128).round().astype( np.uint8)
             v = ( 0.43921569 * r - 0.40389019 * g - 0.03532550 * b + 128).round().astype( np.uint8)
         else :
-            print( "ERROR: internal error bgr2yuv()")
+            print( "ERROR: internal error bgr2yuv()", file = sys.stderr)
             exit( 1)
     return y, u, v
 
@@ -327,8 +318,8 @@ def save_bgr2nv12( bgr_mat, standard, fullrange, info) :
 def prepare_save( info, args) :
     path = args.path if args.path else "."
     if os.path.isdir( path) :
-        if args.keep_name :
-            info[ "output"] = path + "/" + info[ "filename"]
+        if args.suffix is not None:
+            info[ "output"] = path + "/" + info[ "filename"] + args.suffix
         elif args.output_type == "jpg" :
             info[ "output"] = path + "/" + info[ "filename"] + ".jpg"
         elif args.output_type == "png" :
@@ -347,6 +338,12 @@ def prepare_save( info, args) :
             info[ "output"] = path + "/" + info[ "filename"] + ".bin"
     else :
         info[ "output"] = path
+        folder = os.path.dirname( path)
+        if len( folder) > 0 and not os.path.isdir( folder):
+            try: # to make folder
+                os.makedirs( folder)
+            except:
+                pass
 
 def encode_image( path, ext, mat) :
     # use imencode() instead of imwrite() to avoid failure of opencv with non-ascii path:
@@ -404,7 +401,7 @@ def save_mat( mat, info, args) :
         encode_image( info[ "output"], ".bmp", mat)
     elif args.output_type == 'csv' :
         save_csv( mat, info)
-    elif args.output_type == "8u" :
+    elif args.output_type == "u8" :
         if info[ "channel"] == 3 :
             mat = cv.cvtColor( mat, cv.COLOR_BGR2GRAY)
         elif info[ "channel"] == 4 :
@@ -412,14 +409,14 @@ def save_mat( mat, info, args) :
         else :
             mat = np.uint8( np.rint( mat))
         mat.tofile( info[ "output"])
-    elif args.output_type == "16u" :
+    elif args.output_type == "u16" :
         if info[ "channel"] == 3 :
             mat = cv.cvtColor( mat, cv.COLOR_BGR2GRAY)
         elif info[ "channel"] == 4 :
             mat = cv.cvtColor( mat, cv.COLOR_BGRA2GRAY)
-        mat = np.uint16( np.rint( mat)) * 256
+        mat = np.uint16( np.rint( mat * 256))
         mat.tofile( info[ "output"])
-    elif args.output_type == "32f" :
+    elif args.output_type == "f32" :
         if info[ "channel"] == 3 :
             mat = cv.cvtColor( mat, cv.COLOR_BGR2GRAY)
         elif info[ "channel"] == 4 :
@@ -546,7 +543,7 @@ def process_image( mat, filename, args) :
         prepare_save( info, args)
         save_mat( mat, info, args)
     else:
-        print( "ERROR: internal error process_image()")
+        print( "ERROR: internal error process_image()", file = sys.stderr)
         exit( 1)
 
 def get_size( array, info, args) :
@@ -624,15 +621,15 @@ def process_raw( array, filename, args) :
         yuv_fullrange = False
     info = {}
     info[ "filename"] = os.path.basename( filename)
-    if args.input_type == "8u" :
+    if args.input_type == "u8" :
         info[ "channel"] = 1
         info[ "pixel_bytes"] = 1
         info[ "origin_dtype"] = np.uint8
-    elif args.input_type == "16u" :
+    elif args.input_type == "u16" :
         info[ "channel"] = 1
         info[ "pixel_bytes"] = 2
         info[ "origin_dtype"] = np.uint16
-    elif args.input_type == "32f" :
+    elif args.input_type == "f32" :
         info[ "channel"] = 1
         info[ "pixel_bytes"] = 4
         info[ "origin_dtype"] = np.float32
@@ -649,7 +646,7 @@ def process_raw( array, filename, args) :
         info[ "pixel_bytes"] = 1
         info[ "origin_dtype"] = np.uint8
     else :
-        print( "ERROR: internal error process_raw()")
+        print( "ERROR: internal error process_raw()", file = sys.stderr)
         exit( 1)
     if not get_size( array, info, args) :
         print( "Warning: invalid size configuration for input file '" + filename + "'", file = sys.stderr)
@@ -658,17 +655,17 @@ def process_raw( array, filename, args) :
     scanline = int( info[ "scanline"])
     w = int( info[ "width"])
     h = int( info[ "height"])
-    if args.input_type == "8u" :
+    if args.input_type == "u8" :
         mat = array[ : stride * scanline].reshape( scanline, stride)
         mat = mat[ :h, :w]
         mat = normalize( mat, info, args)
-    elif args.input_type == "16u" :
+    elif args.input_type == "u16" :
         mat = array[ : stride * scanline].reshape( scanline, stride)
         mat = mat[ : h, : w * 2]
         mat = np.frombuffer( mat.data, dtype = np.uint16)
         mat = mat.reshape( h, w)
         mat = normalize( mat, info, args)
-    elif args.input_type == "32f" :
+    elif args.input_type == "f32" :
         mat = array[ : stride * scanline].reshape( scanline, stride)
         mat = mat[ : h, : w * 4]
         mat = np.frombuffer( mat.data, dtype = np.float32)
@@ -717,7 +714,7 @@ def process_raw( array, filename, args) :
         yuv[ 1::2, 1::2, 2] = v
         mat = yuv2bgr( yuv, yuv_cs, yuv_fullrange, info, args)
     else :
-        print( "ERROR: internal error process_raw()")
+        print( "ERROR: internal error process_raw()", file = sys.stderr)
         exit( 1)
     prepare_save( info, args)
     save_mat( mat, info, args)
@@ -745,10 +742,20 @@ def process( filename, args) :
             return
         process_image( mat, filename, args)
     elif args.input_type == "csv":
-        print( "ERROR: do NOT support reading from csv files!")
+        print( "ERROR: do NOT support reading from csv files!", file = sys.stderr)
         exit( 1)
     else :
         process_raw( array, filename, args)
+
+def process_all( files, args):
+    if len( files) > 1 and args.path and not os.path.isdir( args.path):
+        try:
+            os.makedirs( args.path)
+        except Exception as e:
+            print( "ERROR: failed creating output folder: " + str( e), file = sys.stderr)
+            exit( 1)
+    for file in files :
+        process( file, args)
 
 def main( args) :
     parser = argparse.ArgumentParser( description = DESC_STR, usage = USAGE_STR)
@@ -778,8 +785,8 @@ def main( args) :
             help = "data range of output yuv data, default is full-range")
     parser.add_argument( "-n", "--normalize", type = float,
             help = "scale value with NORMALIZE as max value, do softmax if set to zero")
-    parser.add_argument( "-k", "--keep-name", action = "store_true",
-            help = "keep names of output files same as original files.")
+    parser.add_argument( "-x", "--suffix", type = str,
+            help = "specify suffix of output files.")
     parser.add_argument( "-f", "--force", action = "store_true",
             help = "force to rewrite existing file(s)")
     parser.add_argument( "-v", "--verbose", action = "store_true",
@@ -789,20 +796,16 @@ def main( args) :
         files.remove( "--")
     except :
         pass
-    if len( files) > 1 and args.path and not os.path.isdir( args.path) :
-        print( "Error: PATH should be directory for multiple input files!", file = sys.stderr)
-        exit( 1)
-    if os.name == "posix" :
-        for file in files :
-            process( file, args)
-    else :
-        for file_arg in files :
-            expanded_file_arg = glob.glob( file_arg)
-            if len( expanded_file_arg) > 0:
-                for f in  expanded_file_arg:
-                    process( f, args)
+    if os.name != "posix":
+        expanded_files = []
+        for f in files:
+            expanded = glob.glob( f)
+            if len( expanded) > 0:
+                expanded_files += expanded
             else:
-                process( file_arg, args)
+                expanded_files.append( f)
+        files = expanded_files
+    process_all( files, args)
 
 if __name__ == "__main__" :
     main( sys.argv[ 1:])

@@ -10,7 +10,7 @@
 ###
 
 _imageconv_py_completion() {
-    local OPT_LIST="-- -h --path -p --width --col -c --height --row -r --stride -s --scanline -l --input-type -i --output-type -o --input-yuv-color --output-yuv-color --input-yuv-range --output-yuv-range --normalize -n --keep-name -k --force -f --verbose -v -j --jump-through"
+    local OPT_LIST="-- -h --path -p --width --col -c --height --row -r --stride -s --scanline -l --input-type -i --output-type -o --input-yuv-color --output-yuv-color --input-yuv-range --output-yuv-range --normalize -n --keep-name -x --suffix --force -f --verbose -v -j --jump-through"
     local cur="${COMP_WORDS[COMP_CWORD]}"
     if [[ "$COMP_CWORD" -gt 1 ]]
     then
@@ -20,7 +20,7 @@ _imageconv_py_completion() {
                 COMPREPLY=( $(compgen -d -- "$cur") )
                 return;;
             '-i'|'--input-type'|'-o'|'--output-type')
-                COMPREPLY=($(compgen -W "8u 16u 32f bgr rgb rgba bgra yuv nv21 nv12 jpg png bmp" -- "$cur"))
+                COMPREPLY=($(compgen -W "u8 u16 f32 bgr rgb rgba bgra yuv nv21 nv12 jpg png bmp csv" -- "$cur"))
                 return;;
             '--input-yuv-color'|'--output-yuv-color')
                 COMPREPLY=($(compgen -W "bt601 bt709 bt2020" -- "$cur"))
@@ -28,7 +28,7 @@ _imageconv_py_completion() {
             '--input-yuv-range'|'--output-yuv-range')
                 COMPREPLY=($(compgen -W "fullrange fullswing videorange studioswing" -- "$cur"))
                 return;;
-            '-c'|'--col'|'--width'|'-r'|'--row'|'--height'|'-s'|'--stride'|'-l'|'--scanline'|'-n'|'--normalize'|'-j'|'--jump-through')
+            '-c'|'--col'|'--width'|'-r'|'--row'|'--height'|'-s'|'--stride'|'-l'|'--scanline'|'-n'|'--normalize'|'-j'|'--jump-through'|'-x'|'--suffix')
                 COMPREPLY=()
                 return;;
         esac
