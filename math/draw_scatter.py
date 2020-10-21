@@ -45,7 +45,7 @@ COLORS = [
     '#a9561e', # sienna
 ]
 
-MARKERS = [ 'o', '^', 'x', 'd', '+', 'v', 's', '<', '1', '*', '>',]
+MARKERS = [ '^', 'x', 'd', '+', 'o', 'v', 's', '<', '1', '*', '>',]
 
 # Basic Functions:
 
