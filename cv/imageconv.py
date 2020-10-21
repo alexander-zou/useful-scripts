@@ -369,7 +369,7 @@ def save_csv( mat, info) :
                 if j > 0:
                     out.write( ",")
                 if ch > 1:
-                    out.write( str( tuple( mat[ i, j])))
+                    out.write( '"' + str( tuple( mat[ i, j])) + '"')
                 else:
                     out.write( str( mat[ i, j]))
             out.write( "\n")
@@ -724,7 +724,28 @@ def process( filename, args) :
         print( "Warning: input file '" + filename + "' does not exist, ignored.", file = sys.stderr)
         return
     try :
-        if args.jump_through > 0:
+        if args.input_type == 'csv':
+            import csv
+            with open( filename, 'r') as csv_file:
+                dialect = csv.Sniffer().sniff( csv_file.read())
+                csv_file.seek( 0)
+                reader = csv.reader( csv_file, dialect)
+                jump_through = args.jump_through
+                sheet = []
+                for row in reader:
+                    if jump_through > 0:
+                        jump_through -= 1
+                        continue
+                    row_data = []
+                    for data in row:
+                        row_data.append( float( data))
+                    if len( row_data) > 0:
+                        sheet.append( row_data)
+                        if len( row_data) != len( sheet[ 0]):
+                            print( "ERROR: inconsistent number column within csv file!", file = sys.stderr)
+                            exit( 1)
+                array = np.array( sheet, dtype = np.float32)
+        elif args.jump_through > 0:
             with open( filename, 'rb') as inp:
                 inp.seek( args.jump_through)
                 array = np.fromfile( inp, dtype = np.uint8)
@@ -742,8 +763,9 @@ def process( filename, args) :
             return
         process_image( mat, filename, args)
     elif args.input_type == "csv":
-        print( "ERROR: do NOT support reading from csv files!", file = sys.stderr)
-        exit( 1)
+        if args.normalize is None:
+            args.normalize = 0
+        process_image( array, filename, args)
     else :
         process_raw( array, filename, args)
 
@@ -774,7 +796,7 @@ def main( args) :
     parser.add_argument( "-o", "--output-type", choices = IMAGE_TYPES, required = True,
             help = "data format of output image")
     parser.add_argument( "-j", "--jump-through", type = int, default = 0,
-            help = "number of bytes to jump through at the begining of input file")
+            help = "number of bytes (or lines for csv) to jump through at the begining of input file")
     parser.add_argument( "--input-yuv-color", choices = YUV_COLOR_STDS,
             help = "color space of input yuv data, default is BT.601")
     parser.add_argument( "--input-yuv-range", choices = YUV_RANGES,
