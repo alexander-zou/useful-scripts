@@ -182,7 +182,7 @@ OPTIONS:
 
 EXAMPLES:
 	# Count text files that contain hex number:
-	search_fs -i -f '0x[\da-f]+' ~/src
+	search_fs -i -f '0x[\\da-f]+' ~/src
 
 	# Search for 'main' in binary & text files inside folder '-1' & '-2':
 	search_fs -b -- main -1 -2
