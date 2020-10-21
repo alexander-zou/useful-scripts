@@ -231,6 +231,7 @@ var_from = tk.StringVar()
 var_to = tk.StringVar()
 var_tltype = tk.StringVar()
 var_tln = tk.StringVar()
+var_hide = tk.IntVar()
 
 plt.rcParams[ 'axes.unicode_minus'] = False
 plt.rcParams[ 'font.sans-serif'] = [ 'SimHei', 'Heiti TC', 'Adobe Heiti Std', 'Adobe Fan Heiti Std']
@@ -249,6 +250,7 @@ class Serial:
         self.y = ''
         self.trend = TL_NONE
         self.n = 0
+        self.hide = 0
         self.filters = ''
     def set( self, other):
         self.name       = other.name
@@ -260,6 +262,7 @@ class Serial:
         self.y          = other.y
         self.trend      = other.trend
         self.n          = other.n
+        self.hide       = other.hide
         self.filters    = other.filters
     def __eq__( self, other):
         return isinstance( other, Serial) \
@@ -272,6 +275,7 @@ class Serial:
             and self.y          == other.y \
             and self.trend      == other.trend \
             and self.n          == other.n \
+            and self.hide       == other.hide \
             and self.filters    == other.filters \
     
 class SerialManager:
@@ -295,6 +299,7 @@ class SerialManager:
             SerialManager.serial_list[ -1].y = SerialManager.serial_list[ -2].y
             SerialManager.serial_list[ -1].trend = SerialManager.serial_list[ -2].trend
             SerialManager.serial_list[ -1].n = SerialManager.serial_list[ -2].n
+            SerialManager.serial_list[ -1].hide = SerialManager.serial_list[ -2].hide
             SerialManager.serial_list[ -1].filters = SerialManager.serial_list[ -2].filters
         return pos
     def remove( idx):
@@ -412,6 +417,8 @@ class SerialManager:
                     raise Exception( "Internal Exception F676")
                 if len( x) <= 0 or len( y) <= 0:
                     raise Exception( "Invalid data region!")
+                if SerialManager.serial_list[ i].hide:
+                    continue
                 # draw scatter:
                 plt.scatter( x, y, c = color, marker = marker, label = name)
                 # draw trend line:
@@ -478,6 +485,7 @@ def serial_2_ui( serial = None):
         var_y.set( serial.y)
         var_tltype.set( serial.trend)
         var_tln.set( serial.n)
+        var_hide.set( serial.hide)
         text_filter.delete( '1.0', tk.END)
         text_filter.insert( tk.END, serial.filters)
 
@@ -491,6 +499,7 @@ def ui_2_serial():
     serial.y = var_y.get()
     serial.trend = var_tltype.get()
     serial.n = var_tln.get()
+    serial.hide = var_hide.get()
     serial.filters = text_filter.get( '1.0', tk.END)[:-1]
     return serial
 
@@ -604,6 +613,9 @@ entry_x.pack( side = tk.LEFT)
 tk.Label( frame_coordinates, anchor = tk.W, text = "Y:").pack( side = tk.LEFT)
 entry_y = tk.Entry( frame_coordinates, textvariable = var_y, width = 4)
 entry_y.pack( side = tk.LEFT)
+
+check_hide = tk.Checkbutton( frame_coordinates, anchor = tk.W, text = "Hide", variable = var_hide)
+check_hide.pack( side = tk.RIGHT)
 
 frame_trendline = tk.Frame( window_main)
 frame_trendline.pack( side = tk.TOP, fill = tk.X, padx = 4, pady = 4)
