@@ -144,7 +144,7 @@ def check_filters( filters, sheet, direction, idx):
     if filters is None or len( filters) <= 0:
         return True
     try:
-        exp = parse_filter_line( ''.join( filters.splitlines()), sheet, direction, idx).strip()
+        exp = parse_filter_line( ' '.join( filters.splitlines()), sheet, direction, idx).strip()
         if len( exp) > 0:
             value = eval( exp)
             if not value or value == '':
@@ -221,6 +221,9 @@ def generate_trend( x, y, t, n):
 window_main = tk.Tk()
 window_main.title( 'Scatter Config')
 
+var_global_title = tk.StringVar()
+var_global_tltype = tk.StringVar()
+var_global_tln = tk.StringVar()
 var_dir = tk.IntVar()
 var_dir.set( 0)
 var_name = tk.StringVar()
@@ -350,10 +353,12 @@ class SerialManager:
     def draw():
         if len( SerialManager.serial_list) <= 0 or not SerialManager.changed:
             return
-        plt.cla()
-        for i in SerialManager.id_range():
-            name = SerialManager.serial_list[ i].name
-            try :
+        try :
+            plt.cla()
+            all_x = []
+            all_y = []
+            for i in SerialManager.id_range():
+                name = SerialManager.serial_list[ i].name
                 # basic info:
                 x_idx = parse_sheet_index( SerialManager.serial_list[ i].x)
                 if x_idx < 0:
@@ -416,7 +421,10 @@ class SerialManager:
                 else:
                     raise Exception( "Internal Exception F676")
                 if len( x) <= 0 or len( y) <= 0:
-                    raise Exception( "Invalid data region!")
+                    continue
+                if var_global_tltype.get() != TL_NONE:
+                    all_x += x
+                    all_y += y
                 if SerialManager.serial_list[ i].hide:
                     continue
                 # draw scatter:
@@ -424,13 +432,20 @@ class SerialManager:
                 # draw trend line:
                 trend_x, trend_y = generate_trend( x, y, SerialManager.serial_list[ i].trend, SerialManager.serial_list[ i].n)
                 if trend_x is not None and trend_y is not None:
-                    plt.plot( trend_x, trend_y, color = color + '30')
-            except Exception as e:
-                raise Exception( "Failed drawing '" + name + "': " + str( e))
-            finally:
-                SerialManager.changed = False
+                    plt.plot( trend_x, trend_y, color = color + '48')
+            # global trend:
+            trend_x, trend_y = generate_trend( all_x, all_y, var_global_tltype.get(), var_global_tln.get())
+            if trend_x is not None and trend_y is not None:
+                plt.plot( trend_x, trend_y, color = '#00000010')
+        except Exception as e:
+            raise Exception( "Failed drawing '" + name + "': " + str( e))
+        finally:
+            SerialManager.changed = False
         csv_cache.clear()
-        plt.title( SerialManager.title())
+        if len( var_global_title.get().strip()) > 0:
+            plt.title( var_global_title.get().strip())
+        else:
+            plt.title( SerialManager.title())
         plt.grid()
         plt.legend()
         plt.draw()
@@ -554,6 +569,23 @@ def click_browse( evt = None):
 
 
 # Widgets & Layout:
+
+frame_global = tk.Frame( window_main)
+frame_global.pack( side = tk.TOP, fill = tk.X, padx = 8, pady = 4)
+
+tk.Label( frame_global, anchor = tk.W, text = "TITLE").pack( side = tk.LEFT, padx = 4)
+
+entry_global_title = tk.Entry( frame_global, textvariable = var_global_title)
+entry_global_title.pack( side = tk.LEFT, fill = tk.X, expand = True)
+
+tk.Label( frame_global, anchor = tk.W, text = "Total Trend:").pack( side = tk.LEFT, padx = 4)
+combobox_global_tltype = ttk.Combobox( frame_global, textvariable = var_global_tltype, state = 'readonly', values = ( TL_NONE, TL_POLY, TL_AVG, TL_VERTICAL, TL_HORIZONTAL))
+combobox_global_tltype.current( 0)
+combobox_global_tltype.pack( side = tk.LEFT)
+
+tk.Label( frame_global, anchor = tk.W, text = "N:").pack( side = tk.LEFT)
+entry_global_n = tk.Entry( frame_global, textvariable = var_global_tln, width = 4)
+entry_global_n.pack( side = tk.LEFT)
 
 frame_serial = tk.Frame( window_main)
 frame_serial.pack( fill = tk.BOTH, expand = True, padx = 4, pady = 4)
