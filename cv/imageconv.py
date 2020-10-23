@@ -17,7 +17,7 @@ USAGE_STR = "imageconv.py [-h] [-p PATH] [-c COL] [-r ROW] [-s STRIDE] [-l SCANL
             "[-j BYTES] -i FORMAT -o FORMAT [-n NORMALIZE] " + \
             "[--] FILE [FILE ...]"
 IMAGE_TYPES = [
-    "u8", "u16", "f32",
+    "u8", "u16", "u32", "f32",
     "bgr", "rgb", "rgba", "bgra",
     "yuv", "nv21", "nv12",
     "jpg", "png", "bmp",
@@ -126,7 +126,7 @@ def normalize( mat, info, args) :
         norm_max = args.normalize
     else:
         norm_max = 0
-    if args.input_type in [ "u8", "u16", "f32"] :
+    if args.input_type in [ "u8", "u16", "u32", "f32"] :
         mat_max = mat.max()
         info[ "range"] = "[" + str( mat.min()) + "," + str( mat_max) + "]"
         if norm_max == 0 :
@@ -134,6 +134,8 @@ def normalize( mat, info, args) :
         if norm_max <= 0 :
             if args.input_type == "u16" :
                 return mat.astype( np.float32) / 256.0
+            elif args.input_type == 'u32':
+                return mat.astype( np.float32) / 16777216.0
             elif args.input_type == "f32" :
                 return mat.astype( np.float32) * 255.0
             else :
@@ -414,7 +416,14 @@ def save_mat( mat, info, args) :
             mat = cv.cvtColor( mat, cv.COLOR_BGR2GRAY)
         elif info[ "channel"] == 4 :
             mat = cv.cvtColor( mat, cv.COLOR_BGRA2GRAY)
-        mat = np.uint16( np.rint( mat * 256))
+        mat = np.uint16( np.rint( mat * 257))
+        mat.tofile( info[ "output"])
+    elif args.output_type == "u32":
+        if info[ "channel"] == 3 :
+            mat = cv.cvtColor( mat, cv.COLOR_BGR2GRAY)
+        elif info[ "channel"] == 4 :
+            mat = cv.cvtColor( mat, cv.COLOR_BGRA2GRAY)
+        mat = np.uint32( np.rint( mat * 16843009))
         mat.tofile( info[ "output"])
     elif args.output_type == "f32" :
         if info[ "channel"] == 3 :
@@ -629,6 +638,10 @@ def process_raw( array, filename, args) :
         info[ "channel"] = 1
         info[ "pixel_bytes"] = 2
         info[ "origin_dtype"] = np.uint16
+    elif args.input_type == "u32" :
+        info[ "channel"] = 1
+        info[ "pixel_bytes"] = 4
+        info[ "origin_dtype"] = np.uint32
     elif args.input_type == "f32" :
         info[ "channel"] = 1
         info[ "pixel_bytes"] = 4
@@ -663,6 +676,12 @@ def process_raw( array, filename, args) :
         mat = array[ : stride * scanline].reshape( scanline, stride)
         mat = mat[ : h, : w * 2]
         mat = np.frombuffer( mat.data, dtype = np.uint16)
+        mat = mat.reshape( h, w)
+        mat = normalize( mat, info, args)
+    elif args.input_type == "u32" :
+        mat = array[ : stride * scanline].reshape( scanline, stride)
+        mat = mat[ : h, : w * 4]
+        mat = np.frombuffer( mat.data, dtype = np.uint32)
         mat = mat.reshape( h, w)
         mat = normalize( mat, info, args)
     elif args.input_type == "f32" :

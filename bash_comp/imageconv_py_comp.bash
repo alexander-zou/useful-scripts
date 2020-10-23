@@ -20,7 +20,7 @@ _imageconv_py_completion() {
                 COMPREPLY=( $(compgen -d -- "$cur") )
                 return;;
             '-i'|'--input-type'|'-o'|'--output-type')
-                COMPREPLY=($(compgen -W "u8 u16 f32 bgr rgb rgba bgra yuv nv21 nv12 jpg png bmp csv" -- "$cur"))
+                COMPREPLY=($(compgen -W "u8 u16 u32 f32 bgr rgb rgba bgra yuv nv21 nv12 jpg png bmp csv" -- "$cur"))
                 return;;
             '--input-yuv-color'|'--output-yuv-color')
                 COMPREPLY=($(compgen -W "bt601 bt709 bt2020" -- "$cur"))
