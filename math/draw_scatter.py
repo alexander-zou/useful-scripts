@@ -10,7 +10,7 @@
 
 '''
 
-import os
+import os, sys
 import csv
 import numpy as np
 import warnings
@@ -46,6 +46,13 @@ COLORS = [
 ]
 
 MARKERS = [ '^', 'x', 'd', '+', 'o', 'v', 's', '<', '1', '*', '>',]
+
+default_file = None
+try:
+    if os.path.isfile( sys.argv[ 1]):
+        default_file = sys.argv[ 1]
+except:
+    pass
 
 # Basic Functions:
 
@@ -304,6 +311,8 @@ class SerialManager:
             SerialManager.serial_list[ -1].n = SerialManager.serial_list[ -2].n
             SerialManager.serial_list[ -1].hide = SerialManager.serial_list[ -2].hide
             SerialManager.serial_list[ -1].filters = SerialManager.serial_list[ -2].filters
+        if default_file and ( not SerialManager.serial_list[ -1].file or len( SerialManager.serial_list[ -1].file) <= 0):
+            SerialManager.serial_list[ -1].file = default_file
         return pos
     def remove( idx):
         if idx >= 0 and idx < len( SerialManager.serial_list):
