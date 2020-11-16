@@ -398,7 +398,11 @@ def save_mat( mat, info, args) :
     if args.output_type == "jpg" :
         encode_image( info[ "output"], ".jpg", mat)
     elif args.output_type == "png" :
-        encode_image( info[ "output"], ".png", mat)
+        print( mat.dtype, info[ "origin_dtype"])
+        if np.issubdtype( mat.dtype, np.floating) and info[ "origin_dtype"] == np.uint16:
+            encode_image( info[ "output"], ".png", np.round( ( mat * 256)).astype( np.uint16))
+        else:
+            encode_image( info[ "output"], ".png", mat)
     elif args.output_type == "bmp" :
         encode_image( info[ "output"], ".bmp", mat)
     elif args.output_type == 'csv' :
@@ -416,7 +420,7 @@ def save_mat( mat, info, args) :
             mat = cv.cvtColor( mat, cv.COLOR_BGR2GRAY)
         elif info[ "channel"] == 4 :
             mat = cv.cvtColor( mat, cv.COLOR_BGRA2GRAY)
-        mat = np.uint16( np.rint( mat * 257))
+        mat = np.uint16( np.rint( mat * 256))
         mat.tofile( info[ "output"])
     elif args.output_type == "u32":
         if info[ "channel"] == 3 :
@@ -532,6 +536,7 @@ def process_image( mat, filename, args) :
             a = mat[ :, :, 1]
         bgra = cv.merge( ( y, y, y, a))
         prepare_save( info, args)
+        info[ "origin_dtype"] = np.uint8
         save_mat( bgra.astype( np.uint8), info, args)
     elif info[ "channel"] >= 3:
         if args.normalize is not None :
@@ -550,6 +555,7 @@ def process_image( mat, filename, args) :
         elif mat.dtype == np.float32:
             mat = ( mat * 255).astype( np.uint8)
         prepare_save( info, args)
+        info[ "origin_dtype"] = np.uint8
         save_mat( mat, info, args)
     else:
         print( "ERROR: internal error process_image()", file = sys.stderr)
