@@ -398,7 +398,6 @@ def save_mat( mat, info, args) :
     if args.output_type == "jpg" :
         encode_image( info[ "output"], ".jpg", mat)
     elif args.output_type == "png" :
-        print( mat.dtype, info[ "origin_dtype"])
         if np.issubdtype( mat.dtype, np.floating) and info[ "origin_dtype"] == np.uint16:
             encode_image( info[ "output"], ".png", np.round( ( mat * 256)).astype( np.uint16))
         else:
