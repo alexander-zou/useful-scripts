@@ -794,7 +794,7 @@ def process( filename, args) :
         process_raw( array, filename, args)
 
 def process_all( files, args):
-    if len( files) > 1 and args.path and not os.path.isdir( args.path):
+    if ( len( files) > 1 or args.path.endswith('/') or args.path.endswith('\\')) and args.path and not os.path.isdir( args.path):
         try:
             os.makedirs( args.path)
         except Exception as e:
