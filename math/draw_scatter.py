@@ -569,7 +569,6 @@ def click_del():
 
 def click_serial( evt = None):
     sels = listbox_serial.curselection()
-    print( "click")
     if len( sels) == 1 and sels[0] != SerialManager.loaded_pos:
         save_current_serial()
         serial_2_ui( SerialManager.load( sels[ 0]))
@@ -585,13 +584,14 @@ def click_update( evt = None):
     save_current_serial()
 
 def click_browse( evt = None):
-    path = tkfd.askopenfilename( title = 'Select data source', filetypes = (('CSV Sheet','.csv'),('ALL','*.*')))
-    if SerialManager.loaded_pos < 0:
-        global default_file
-        default_file = path
-        click_add()
-    elif len( path) > 0 and os.path.isfile( path):
-        var_file.set( path)
+    path = tkfd.askopenfilename( title = 'Select data source', filetypes = [('CSV Sheet','.csv'),('ALL','*.*')])
+    if len( path) > 0 and os.path.isfile( path):
+        if SerialManager.loaded_pos < 0:
+            global default_file
+            default_file = path
+            click_add()
+        else:
+            var_file.set( path)
 
 
 # Widgets & Layout:
