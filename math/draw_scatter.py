@@ -326,6 +326,15 @@ class SerialManager:
         if idx >= 0 and idx < len( SerialManager.serial_list):
             return SerialManager.serial_list[ idx].name
         return ''
+    def display_name( idx = None):
+        if idx is None:
+            idx = SerialManager.loaded_pos
+        if idx >= 0 and idx < len( SerialManager.serial_list):
+            if SerialManager.serial_list[ idx].hide > 0:
+                return '# ' + SerialManager.serial_list[ idx].name
+            else:
+                return SerialManager.serial_list[ idx].name
+        return ''
     def get( idx = None):
         if idx is None:
             idx = SerialManager.loaded_pos
@@ -477,7 +486,7 @@ def refresh_serial_list():
     global listbox_serial
     listbox_serial.delete( 0, tk.END)
     for i in SerialManager.id_range():
-        listbox_serial.insert( tk.END, SerialManager.name( i))
+        listbox_serial.insert( tk.END, SerialManager.display_name( i))
 
 def highlight_serial( pos):
     global listbox_serial
@@ -528,11 +537,10 @@ def ui_2_serial():
     return serial
 
 def save_current_serial():
-    if SerialManager.name() != var_name.get():
-        pos = SerialManager.loaded_pos
-        listbox_serial.delete( pos)
-        listbox_serial.insert( pos, var_name.get())
     SerialManager.save( ui_2_serial())
+    pos = SerialManager.loaded_pos
+    listbox_serial.delete( pos)
+    listbox_serial.insert( pos, SerialManager.display_name())
     try:
         SerialManager.draw()
     except Exception as e:
@@ -561,19 +569,28 @@ def click_del():
 
 def click_serial( evt = None):
     sels = listbox_serial.curselection()
+    print( "click")
     if len( sels) == 1 and sels[0] != SerialManager.loaded_pos:
         save_current_serial()
         serial_2_ui( SerialManager.load( sels[ 0]))
+
+def double_click_serial( evt = None):
+    sels = listbox_serial.curselection()
+    if len( sels) == 1:
+        var_hide.set( not var_hide.get())
+        click_update()
 
 def click_update( evt = None):
     SerialManager.changed = True
     save_current_serial()
 
 def click_browse( evt = None):
-    if SerialManager.loaded_pos < 0:
-        return
     path = tkfd.askopenfilename( title = 'Select data source', filetypes = (('CSV Sheet','.csv'),('ALL','*.*')))
-    if len( path) > 0 and os.path.isfile( path):
+    if SerialManager.loaded_pos < 0:
+        global default_file
+        default_file = path
+        click_add()
+    elif len( path) > 0 and os.path.isfile( path):
         var_file.set( path)
 
 
@@ -602,6 +619,7 @@ frame_serial.pack( fill = tk.BOTH, expand = True, padx = 4, pady = 4)
 listbox_serial = tk.Listbox( frame_serial, borderwidth = 2, relief = tk.SUNKEN, selectmode = tk.SINGLE)
 listbox_serial.pack( side = tk.LEFT, fill = tk.BOTH, expand = True)
 listbox_serial.bind( '<<ListboxSelect>>', click_serial)
+listbox_serial.bind( '<Double-1>', double_click_serial)
 
 frame_adddel = tk.Frame( frame_serial)
 frame_adddel.pack( side = tk.RIGHT)
