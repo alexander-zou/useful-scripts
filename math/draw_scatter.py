@@ -20,6 +20,16 @@ import tkinter.scrolledtext as tkst
 import tkinter.messagebox as tkmb
 from tkinter import ttk
 from tkinter import filedialog as tkfd
+try:
+    import openpyxl
+    openpyxl_loaded = True
+except:
+    openpyxl_loaded = False
+try:
+    import xlrd
+    xlrd_loaded = True
+except:
+    xlrd_loaded = False
 
 # Defines:
 
@@ -72,16 +82,26 @@ def choose_color( idx):
     color += hex[ ( 5 + idx * 5) % 16]
     return color
 
-csv_cache = dict()
+sheet_cache = dict()
 
-def load_csv_sheet( path):
+def load_sheet( path, sheet):
     if len( path) <= 0:
-        raise Exception( "Missing CSV file!")
-    abs_path = os.path.abspath( path)
-    if abs_path in csv_cache:
-        return csv_cache[ abs_path]
+        raise Exception( "Missing Data file!")
     if not os.path.isfile( path):
         raise Exception( "File '" + path + "' NOT exists!")
+    if path.lower().endswith( '.csv') or path.lower().endswith( '.txt'):
+        return load_csv_sheet( path)
+    elif path.lower().endswith( '.xls'):
+        return load_old_excel_sheet( path, sheet)
+    elif path.lower()[-5:] in { '.xlsx', '.xlsm', '.xltx', 'xltm'}:
+        return load_excel_sheet( path, sheet)
+    else:
+        raise Exception( "Do NOT support type of file '" + path + "'!")
+
+def load_csv_sheet( path):
+    abs_path = os.path.abspath( path)
+    if abs_path in sheet_cache:
+        return sheet_cache[ abs_path]
     try:
         with open( path, newline = '') as csv_file:
             dialect = csv.Sniffer().sniff( csv_file.read())
@@ -90,10 +110,79 @@ def load_csv_sheet( path):
             sheet = []
             for row in reader:
                 sheet.append( list( row))
-            csv_cache[ abs_path] = sheet
+            sheet_cache[ abs_path] = sheet
             return sheet
     except Exception as e:
         raise Exception( "Failed parsing CSV file: " + str( e))
+
+def load_old_excel_sheet( path, sheet_name):
+    if not xlrd_loaded:
+        raise Exception( "need module 'xlrd' to load data from file '" + path + "'!")
+    sheet_key = ( os.path.abspath( path), sheet_name)
+    if sheet_key in sheet_cache:
+        return sheet_cache[ sheet_key]
+    try:
+        wb = xlrd.open_workbook( path)
+        if not sheet_name or len( sheet_name) <= 0:
+            sheet = wb.sheet_by_index( 0)
+        elif sheet_name in wb.sheet_names():
+            sheet = wb.sheet_by_name( sheet_name)
+        else:
+            try:
+                sheet = wb.sheet_by_index( int( sheet_name))
+            except:
+                raise Exception( "invalid sheet name '" + sheet_name + "'")
+        result = []
+        for row_id in range( sheet.nrows):
+            result.append( [ str( value) for value in sheet.row_values( row_id)])
+        sheet_cache[ sheet_key] = result
+        return result
+    except Exception as e:
+        raise Exception( "Failed loading Excel file: " + str( e))
+
+def load_excel_sheet( path, sheet_name):
+    if not openpyxl_loaded:
+        raise Exception( "need module 'openpyxl' to load data from file '" + path + "'!")
+    sheet_key = ( os.path.abspath( path), sheet_name)
+    if sheet_key in sheet_cache:
+        return sheet_cache[ sheet_key]
+    try:
+        wb = openpyxl.load_workbook( path, data_only = True)
+        if not sheet_name or len( sheet_name) <= 0:
+            sheet = wb[ wb.sheetnames[ 0]]
+        elif sheet_name in wb.sheetnames:
+            sheet = wb[ sheet_name]
+        else:
+            try:
+                sheet = wb[ wb.sheetnames[ int( sheet_name)]]
+            except:
+                raise Exception( "invalid sheet name '" + sheet_name + "'")
+        result = []
+        for row in sheet.rows:
+            row_data = [ cell.value for cell in row]
+            for col in range( len( row_data)):
+                if row_data[ col] is None:
+                    row_data[ col] = ''
+                elif type( row_data[ col]) is str:
+                    pass
+                else:
+                    row_data[ col] = str( row_data[ col])
+            result.append( row_data)
+        # remove extra rows:
+        while len( result) > 0:
+            all_none = True
+            for v in result[ -1]:
+                if v != '':
+                    all_none = False
+                    break
+            if all_none:
+                del result[ -1]
+            else:
+                break
+        sheet_cache[ sheet_key] = result
+        return result
+    except Exception as e:
+        raise Exception( "Failed loading Excel file: " + str( e))
 
 def parse_sheet_index( s):
     s = s.strip()
@@ -239,6 +328,7 @@ var_x = tk.StringVar()
 var_y = tk.StringVar()
 var_from = tk.StringVar()
 var_to = tk.StringVar()
+var_sheet = tk.StringVar()
 var_tltype = tk.StringVar()
 var_tln = tk.StringVar()
 var_hide = tk.IntVar()
@@ -258,6 +348,7 @@ class Serial:
         self.to = ''
         self.x = ''
         self.y = ''
+        self.sheet = ''
         self.trend = TL_NONE
         self.n = 0
         self.hide = 0
@@ -270,6 +361,7 @@ class Serial:
         self.to         = other.to
         self.x          = other.x
         self.y          = other.y
+        self.sheet      = other.sheet
         self.trend      = other.trend
         self.n          = other.n
         self.hide       = other.hide
@@ -283,6 +375,7 @@ class Serial:
             and self.to         == other.to \
             and self.x          == other.x \
             and self.y          == other.y \
+            and self.sheet      == other.sheet \
             and self.trend      == other.trend \
             and self.n          == other.n \
             and self.hide       == other.hide \
@@ -307,6 +400,7 @@ class SerialManager:
             SerialManager.serial_list[ -1].dir = SerialManager.serial_list[ -2].dir
             SerialManager.serial_list[ -1].x = SerialManager.serial_list[ -2].x
             SerialManager.serial_list[ -1].y = SerialManager.serial_list[ -2].y
+            SerialManager.serial_list[ -1].sheet = SerialManager.serial_list[ -2].sheet
             SerialManager.serial_list[ -1].trend = SerialManager.serial_list[ -2].trend
             SerialManager.serial_list[ -1].n = SerialManager.serial_list[ -2].n
             SerialManager.serial_list[ -1].hide = SerialManager.serial_list[ -2].hide
@@ -386,7 +480,7 @@ class SerialManager:
                     raise Exception( 'Missing index of Y values!')
                 from_idx = parse_sheet_index( SerialManager.serial_list[ i].from_)
                 to_idx = parse_sheet_index( SerialManager.serial_list[ i].to)
-                sheet = load_csv_sheet( SerialManager.serial_list[ i].file)
+                sheet = load_sheet( SerialManager.serial_list[ i].file, SerialManager.serial_list[ i].sheet)
                 row_count = len( sheet)
                 col_count = 0
                 for row in sheet:
@@ -459,7 +553,7 @@ class SerialManager:
             raise Exception( "Failed drawing '" + name + "': " + str( e))
         finally:
             SerialManager.changed = False
-        csv_cache.clear()
+        sheet_cache.clear()
         if len( var_global_title.get().strip()) > 0:
             plt.title( var_global_title.get().strip())
         else:
@@ -505,6 +599,7 @@ def serial_2_ui( serial = None):
         var_to.set( '')
         var_x.set( '')
         var_y.set( '')
+        var_sheet.set( '')
         var_tltype.set( '')
         var_tln.set( '')
         text_filter.delete( '1.0', tk.END)
@@ -516,6 +611,7 @@ def serial_2_ui( serial = None):
         var_to.set( serial.to)
         var_x.set( serial.x)
         var_y.set( serial.y)
+        var_sheet.set( serial.sheet)
         var_tltype.set( serial.trend)
         var_tln.set( serial.n)
         var_hide.set( serial.hide)
@@ -530,6 +626,7 @@ def ui_2_serial():
     serial.to = var_to.get()
     serial.x = var_x.get()
     serial.y = var_y.get()
+    serial.sheet = var_sheet.get()
     serial.trend = var_tltype.get()
     serial.n = var_tln.get()
     serial.hide = var_hide.get()
@@ -584,7 +681,12 @@ def click_update( evt = None):
     save_current_serial()
 
 def click_browse( evt = None):
-    path = tkfd.askopenfilename( title = 'Select data source', filetypes = [('CSV Sheet','.csv'),('ALL','*.*')])
+    types = [ 'csv']
+    if xlrd_loaded:
+        types += [ '.xls']
+    if openpyxl_loaded:
+        types += [ '.xlsx', '.xlsm', '.xltx', '.xltm']
+    path = tkfd.askopenfilename( title = 'Select data source', filetypes = [('Spreadsheets', ' '.join( types)), ('ALL', '*.*')])
     if len( path) > 0 and os.path.isfile( path):
         if SerialManager.loaded_pos < 0:
             global default_file
@@ -658,20 +760,26 @@ frame_coordinates = tk.Frame( window_main)
 frame_coordinates.pack( side = tk.TOP, fill = tk.X, padx = 4, pady = 4)
 
 tk.Label( frame_coordinates, anchor = tk.W, text = "FROM:").pack( side = tk.LEFT)
-entry_from = tk.Entry( frame_coordinates, textvariable = var_from, width = 4)
+entry_from = tk.Entry( frame_coordinates, textvariable = var_from, width = 3)
 entry_from.pack( side = tk.LEFT)
 
-tk.Label( frame_coordinates, anchor = tk.W, text = "TO:").pack( side = tk.LEFT)
-entry_to = tk.Entry( frame_coordinates, textvariable = var_to, width = 4)
+tk.Label( frame_coordinates, anchor = tk.W, text = " TO:").pack( side = tk.LEFT)
+entry_to = tk.Entry( frame_coordinates, textvariable = var_to, width = 3)
 entry_to.pack( side = tk.LEFT)
 
-tk.Label( frame_coordinates, anchor = tk.W, text = "X:").pack( side = tk.LEFT)
-entry_x = tk.Entry( frame_coordinates, textvariable = var_x, width = 4)
+tk.Label( frame_coordinates, anchor = tk.W, text = " X:").pack( side = tk.LEFT)
+entry_x = tk.Entry( frame_coordinates, textvariable = var_x, width = 7)
 entry_x.pack( side = tk.LEFT)
 
-tk.Label( frame_coordinates, anchor = tk.W, text = "Y:").pack( side = tk.LEFT)
-entry_y = tk.Entry( frame_coordinates, textvariable = var_y, width = 4)
+tk.Label( frame_coordinates, anchor = tk.W, text = " Y:").pack( side = tk.LEFT)
+entry_y = tk.Entry( frame_coordinates, textvariable = var_y, width = 7)
 entry_y.pack( side = tk.LEFT)
+
+tk.Label( frame_coordinates, anchor = tk.W, text = " Sheet:").pack( side = tk.LEFT)
+entry_sheet = tk.Entry( frame_coordinates, textvariable = var_sheet, width = 8)
+if not openpyxl_loaded:
+    entry_sheet.config( state = tk.DISABLED)
+entry_sheet.pack( side = tk.LEFT)
 
 check_hide = tk.Checkbutton( frame_coordinates, anchor = tk.W, text = "Hide", variable = var_hide)
 check_hide.pack( side = tk.RIGHT)
@@ -684,7 +792,7 @@ combobox_tltype = ttk.Combobox( frame_trendline, textvariable = var_tltype, stat
 combobox_tltype.current( 0)
 combobox_tltype.pack( side = tk.LEFT)
 
-tk.Label( frame_trendline, anchor = tk.W, text = "N:").pack( side = tk.LEFT)
+tk.Label( frame_trendline, anchor = tk.W, text = " N:").pack( side = tk.LEFT)
 entry_n = tk.Entry( frame_trendline, textvariable = var_tln, width = 4)
 entry_n.pack( side = tk.LEFT)
 
