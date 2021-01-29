@@ -147,7 +147,7 @@ def load_excel_sheet( path, sheet_name):
     if sheet_key in sheet_cache:
         return sheet_cache[ sheet_key]
     try:
-        wb = openpyxl.load_workbook( path, data_only = True)
+        wb = openpyxl.load_workbook( path, read_only = True, data_only = True)
         if not sheet_name or len( sheet_name) <= 0:
             sheet = wb[ wb.sheetnames[ 0]]
         elif sheet_name in wb.sheetnames:
