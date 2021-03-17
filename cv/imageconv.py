@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Created by zoujiachen@megvii.com
 # 2018-08-15
