@@ -3,7 +3,6 @@
 # Created by zoujiachen@megvii.com
 # 2018-08-15
 
-from __future__ import print_function
 import sys
 import os
 import glob
@@ -68,6 +67,13 @@ def prompt( msg, default) :
         return False
     else :
         return prompt( msg, default)
+
+def mat_2_file_or_stdout( mat, path):
+    if os.path.abspath( path) == '/dev/stdout':
+        with os.fdopen( sys.stdout.fileno(), 'wb', closefd=False) as stdout:
+            stdout.write( mat.tobytes())
+    else:
+        mat.tofile( path)
 
 def guess_width( original, pixel_bytes, args) :
     pixel_count = len( original) // pixel_bytes
@@ -269,7 +275,8 @@ def save_bgr2yuv( bgr_mat, standard, fullrange, info) :
     yuv[ :, :, 0] = y
     yuv[ :, :, 1] = u
     yuv[ :, :, 2] = v
-    yuv.tofile( info[ "output"])
+    # yuv.tofile( info[ "output"])
+    mat_2_file_or_stdout( yuv, info[ "output"])
 
 def save_bgr2nv21( bgr_mat, standard, fullrange, info) :
     height = int( info[ "height"])
@@ -292,7 +299,8 @@ def save_bgr2nv21( bgr_mat, standard, fullrange, info) :
             vu[ i, j * 2 + 1] = sum_u / 4.0
     vu = np.uint8( np.rint( vu))
     nv21 = np.concatenate( ( y, vu))
-    nv21.tofile( info[ "output"])
+    # nv21.tofile( info[ "output"])
+    mat_2_file_or_stdout( nv21, info[ "output"])
 
 def save_bgr2nv12( bgr_mat, standard, fullrange, info) :
     height = info[ "height"]
@@ -315,7 +323,8 @@ def save_bgr2nv12( bgr_mat, standard, fullrange, info) :
             uv[ i, j * 2 + 1] = sum_v / 4.0
     uv = np.uint8( np.rint( uv))
     nv12 = np.concatenate( ( y, uv))
-    nv12.tofile( info[ "output"])
+    # nv12.tofile( info[ "output"])
+    mat_2_file_or_stdout( nv12, info[ "output"])
 
 def prepare_save( info, args) :
     path = args.path if args.path else "."
@@ -353,7 +362,8 @@ def encode_image( path, ext, mat) :
     if not ret :
         print( "Warning: fail to encode '" + path + "'.", file = sys.stderr)
         return
-    data.tofile( path)
+    # data.tofile( path)
+    mat_2_file_or_stdout( data, path)
 
 def save_csv( mat, info) :
     height = info[ "height"]
@@ -413,35 +423,40 @@ def save_mat( mat, info, args) :
             mat = cv.cvtColor( mat, cv.COLOR_BGRA2GRAY)
         else :
             mat = np.uint8( np.rint( mat))
-        mat.tofile( info[ "output"])
+        # mat.tofile( info[ "output"])
+        mat_2_file_or_stdout( mat, info[ "output"])
     elif args.output_type == "u16" :
         if info[ "channel"] == 3 :
             mat = cv.cvtColor( mat, cv.COLOR_BGR2GRAY)
         elif info[ "channel"] == 4 :
             mat = cv.cvtColor( mat, cv.COLOR_BGRA2GRAY)
         mat = np.uint16( np.rint( mat * 256))
-        mat.tofile( info[ "output"])
+        # mat.tofile( info[ "output"])
+        mat_2_file_or_stdout( mat, info[ "output"])
     elif args.output_type == "u32":
         if info[ "channel"] == 3 :
             mat = cv.cvtColor( mat, cv.COLOR_BGR2GRAY)
         elif info[ "channel"] == 4 :
             mat = cv.cvtColor( mat, cv.COLOR_BGRA2GRAY)
         mat = np.uint32( np.rint( mat * 16843009))
-        mat.tofile( info[ "output"])
+        # mat.tofile( info[ "output"])
+        mat_2_file_or_stdout( mat, info[ "output"])
     elif args.output_type == "f32" :
         if info[ "channel"] == 3 :
             mat = cv.cvtColor( mat, cv.COLOR_BGR2GRAY)
         elif info[ "channel"] == 4 :
             mat = cv.cvtColor( mat, cv.COLOR_BGRA2GRAY)
         mat = mat.astype( np.float32) / 255.0
-        mat.tofile( info[ "output"])
+        # mat.tofile( info[ "output"])
+        mat_2_file_or_stdout( mat, info[ "output"])
     elif args.output_type == "bgr" :
         if info[ "channel"] == 1 :
             mat = np.uint8( np.rint( mat))
             mat = cv.cvtColor( mat, cv.COLOR_GRAY2BGR)
         elif info[ "channel"] == 4 :
             mat = mat[ :, :, :3]
-        mat.tofile( info[ "output"])
+        # mat.tofile( info[ "output"])
+        mat_2_file_or_stdout( mat, info[ "output"])
     elif args.output_type == "rgb" :
         if info[ "channel"] == 1 :
             mat = np.uint8( np.rint( mat))
@@ -449,7 +464,8 @@ def save_mat( mat, info, args) :
         elif info[ "channel"] == 4 :
             mat = mat[ :, :, :3]
         mat = cv.cvtColor( mat, cv.COLOR_BGR2RGB)
-        mat.tofile( info[ "output"])
+        # mat.tofile( info[ "output"])
+        mat_2_file_or_stdout( mat, info[ "output"])
     elif args.output_type == "rgba" :
         if info[ "channel"] == 1 :
             mat = np.uint8( np.rint( mat))
@@ -457,14 +473,16 @@ def save_mat( mat, info, args) :
         elif info[ "channel"] == 3 :
             mat = cv.cvtColor( mat, cv.COLOR_BGR2BGRA)
         mat = cv.cvtColor( mat, cv.COLOR_BGRA2RGBA)
-        mat.tofile( info[ "output"])
+        # mat.tofile( info[ "output"])
+        mat_2_file_or_stdout( mat, info[ "output"])
     elif args.output_type == "bgra" :
         if info[ "channel"] == 1 :
             mat = np.uint8( np.rint( mat))
             mat = cv.cvtColor( mat, cv.COLOR_GRAY2BGRA)
         elif info[ "channel"] == 3 :
             mat = cv.cvtColor( mat, cv.COLOR_BGR2BGRA)
-        mat.tofile( info[ "output"])
+        # mat.tofile( info[ "output"])
+        mat_2_file_or_stdout( mat, info[ "output"])
     elif args.output_type == "yuv" :
         if info[ "channel"] == 1 :
             mat = np.uint8( np.rint( mat))
