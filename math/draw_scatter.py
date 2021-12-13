@@ -721,7 +721,7 @@ frame_serial.pack( fill = tk.BOTH, expand = True, padx = 4, pady = 4)
 listbox_serial = tk.Listbox( frame_serial, borderwidth = 2, relief = tk.SUNKEN, selectmode = tk.SINGLE)
 listbox_serial.pack( side = tk.LEFT, fill = tk.BOTH, expand = True)
 listbox_serial.bind( '<<ListboxSelect>>', click_serial)
-listbox_serial.bind( '<Double-1>', double_click_serial)
+# listbox_serial.bind( '<Double-1>', double_click_serial)
 
 frame_adddel = tk.Frame( frame_serial)
 frame_adddel.pack( side = tk.RIGHT)
