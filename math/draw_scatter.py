@@ -15,6 +15,11 @@ import csv
 import numpy as np
 import warnings
 import matplotlib.pyplot as plt
+try:
+    from tkinterdnd2 import TkinterDnD, DND_FILES
+    DND_ENABLED = True
+except:
+    DND_ENABLED = False
 import tkinter as tk
 import tkinter.scrolledtext as tkst
 import tkinter.messagebox as tkmb
@@ -314,7 +319,10 @@ def generate_trend( x, y, t, n):
 
 # Init:
 
-window_main = tk.Tk()
+if DND_ENABLED:
+    window_main = TkinterDnD.Tk()
+else:
+    window_main = tk.Tk()
 window_main.title( 'Scatter Config')
 
 var_global_title = tk.StringVar()
@@ -695,6 +703,17 @@ def click_browse( evt = None):
         else:
             var_file.set( path)
 
+def on_dnd_enter( evt):
+    evt.widget.focus_force()
+    return evt.action
+
+def on_dnd_drop( evt):
+    if evt.data:
+        path = window_main.tk.splitlist( evt.data)[ 0]
+        if os.path.isfile( path):
+            global default_file
+            default_file = path
+            click_add()
 
 # Widgets & Layout:
 
@@ -805,6 +824,11 @@ text_filter.pack( side = tk.BOTTOM, fill = tk.BOTH, expand = True)
 
 button_update = tk.Button( window_main, height = 2, text = 'Update', command = click_update)
 button_update.pack( side = tk.BOTTOM, fill = tk.X, padx = 18, pady = 6)
+
+if DND_ENABLED:
+    window_main.drop_target_register( DND_FILES)
+    window_main.dnd_bind( '<<DropEnter>>', on_dnd_enter)
+    window_main.dnd_bind( '<<Drop>>', on_dnd_drop)
 
 # Run:
 
