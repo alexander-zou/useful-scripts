@@ -33,11 +33,11 @@ def prompt( msg, default) :
     else :
         return prompt( msg, default)
 
-def load_images( files, title = 'none', font_scale = -1, align_right = False, print_progress = False):
+def load_images( files, title='none', font_scale=-1, align_right=False, print_progress=False, orientation='upright'):
     result = []
     input_shape = None
     for idx, path in enumerate( files):
-        print( '[%2d%%] Loading \'%s\' ...' % ( idx * 100 / len( files), path))
+        print( '[%2d%%] Loading \'%s\' ...' % ( idx * 50 / len( files), path))
         with open( path, 'rb') as inf: # use open() so we can read from pipes
             data = np.frombuffer( inf.read(), dtype = np.uint8)
             raw = cv2.imdecode( data, cv2.IMREAD_UNCHANGED)
@@ -53,6 +53,12 @@ def load_images( files, title = 'none', font_scale = -1, align_right = False, pr
             else:
                 print( "WARNING: cannot process image '%s' of data type '%s', skipped!" % ( path, raw.dtype), file = sys.stderr)
                 continue
+            if orientation in { 'left', '90'}:
+                raw = np.fliplr( cv2.transpose( raw))
+            elif orientation in { 'right', '270'}:
+                raw = np.rot90( raw)
+            elif orientation in { 'down', '180'}:
+                raw = np.fliplr( np.flipud( raw))
             # convert to rgb:
             if len( raw.shape) <= 2 or raw.shape[ 2] <= 2:
                 raw = cv2.cvtColor( raw, cv2.COLOR_GRAY2RGB)
@@ -99,6 +105,7 @@ if __name__ == '__main__':
     parser.add_argument( '-t', '--title', choices = [ 'none', 'name', 'path', 'abspath', 'number'], default = 'none', help = 'type of title add to each frame')
     parser.add_argument( '-s', '--title-size', type = float, default = -1, help = 'font scale of title text')
     parser.add_argument( '-a', '--align-right', action = 'store_true', help = 'title text right alignment')
+    parser.add_argument( '-d', '--orientation', choices = [ 'upright', 'left', 'right', 'down', '90', '180', '270'], default = 'upright', help = 'select orientation of images')
     args, files = parser.parse_known_args( sys.argv[ 1:])
     try :
         files.remove( '--')
@@ -117,17 +124,18 @@ if __name__ == '__main__':
     if not args.keep_order:
         files.sort()
     
-    images = load_images( files, args.title, args.title_size, args.align_right, True)
+    images = load_images( files, args.title, args.title_size, args.align_right, True, args.orientation)
     if os.path.isfile( args.output) \
             and not args.force \
             and not prompt( "File '" + args.output + "' already exists, overwrite?", True):
         print( 'Canceled.', file = sys.stderr)
         exit( 1)
-    print( "[100] Saving '" + args.output + "' ...")
+    print( "[50%] Saving '" + args.output + "' ...")
     folder = os.path.dirname( args.output)
     if len( folder) > 0:
         os.makedirs( os.path.dirname( args.output), exist_ok = True)
     imageio.mimsave( args.output, images, 'GIF', duration = 1/args.framerate)
+    print( "[100] DONE.")
 
 
 # End of 'image2gif.py' 
