@@ -57,6 +57,7 @@ Help()
 	echo
 	echo "Options:"
 	echo -e "\t-a,-auto\tauto choose pattern by suffix, act as '-s' if not sure, this is default"
+	echo -e "\t-bat,-cmd\tcreate Windows script"
 	echo -e "\t-c,-cpp\t\tcreate C/C++ source/header"
 	echo -e "\t-php\t\tcreate PHP script"
 	echo -e "\t-pl,-perl\tcreate Perl script"
@@ -83,6 +84,7 @@ SetMode()
 		case "$suffix" in
 			.c | .cc | .cpp | .h | .hpp )
 							my_mode="c";;
+			.bat | .cmd )	my_mode="cmd";;
 			.php | .inc )	my_mode="php";;
 			.pl | .pm )		my_mode="perl";;
 			.py | .pyw )	my_mode="python";;
@@ -99,6 +101,15 @@ SetMode()
 			mult_comment_end="**/"
 			single_comment_start="/* "
 			single_comment_end="*/"
+			header_line=""
+			interpreter="";;
+		cmd )
+			mult_comment_start=""
+			mult_comment_line_start=":: "
+			mult_comment_line_end=""
+			mult_comment_end=""
+			single_comment_start=":: "
+			single_comment_end=""
 			header_line=""
 			interpreter="";;
 		php )
@@ -181,6 +192,7 @@ then
 		-h | -help )	Help;;
 		-a | -auto )	mode="auto";;
 		-c | -cpp )		mode="c";;
+		-bat | -cmd )	mode="cmd";;
 		-php )			mode="php";;
 		-pl | -perl )	mode="perl";;
 		-py | -python )	mode="python";;
